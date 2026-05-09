@@ -17,7 +17,6 @@ exports.handler = async function (event) {
 
   const { type, instrument, rr, news, notes, images, updateImage, previousAnalysis, alertLevel, lookFor } = body;
 
-  // ─── FOLLOW-UP UPDATE ────────────────────────────────────────────────────────
   if (type === "followup") {
     if (!updateImage) {
       return { statusCode: 400, body: JSON.stringify({ error: "No screenshot provided" }) };
@@ -28,13 +27,17 @@ exports.handler = async function (event) {
 
     const systemPrompt = `You are an expert swing trader giving a follow-up update on a specific trade setup.
 
-CRITICAL: Only describe what you can actually see in the chart image provided. Do not guess or infer the current price — read it directly from the price scale on the right side of the chart. If you cannot read an exact price, say approximately X based on the scale.
+CRITICAL PRICE READING RULES:
+- The current price is the GREEN or highlighted label on the RIGHT side of the chart — read that number
+- DO NOT read the price from the top header bar (O/H/L/C values) — those are old candle values, not current price
+- DO NOT read the price from the dotted horizontal line label — that is a reference level, not current price
+- If there is a green box with a number on the right price scale, that is the current price
 
 Keep your response short — 4 to 8 lines max. Plain english only. No fluff.
 
 Structure:
 Line 1: YES — enter now / NOT YET — still waiting / SETUP OFF — invalidated
-Line 2-3: What you actually see on the chart right now
+Line 2-3: What you actually see on the chart right now, including current price from the RIGHT scale
 Line 4-5: What to do next (enter with levels, or new alert level to watch)`;
 
     const alertContext = alertLevel
@@ -42,15 +45,12 @@ Line 4-5: What to do next (enter with levels, or new alert level to watch)`;
       : "";
 
     const content = [
-      {
-        type: "image",
-        source: { type: "base64", media_type: mediaType, data: base64 },
-      },
+      { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
       {
         type: "text",
         text: `${alertContext}This is a fresh 1H screenshot for ${instrument}.
 
-Look at the chart carefully. Read the current price directly from the right-hand price scale.
+IMPORTANT: Read the current price from the GREEN label on the RIGHT-HAND price scale only. Ignore the O/H/L/C values in the top header bar — those are old candle prices.
 
 Has the setup formed? Give me a short update based only on what you can see in this chart.`,
       },
@@ -79,29 +79,24 @@ Has the setup formed? Give me a short update based only on what you can see in t
 
       const data = await response.json();
       const text = data.content.map((b) => b.text || "").join("");
-      return {
-        statusCode: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ result: text }),
-      };
+      return { statusCode: 200, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ result: text }) };
     } catch (err) {
       return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
     }
   }
 
-  // ─── INITIAL ANALYSIS ────────────────────────────────────────────────────────
   if (!instrument || !images || images.length !== 4) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: "Missing instrument or 4 chart images" }),
-    };
+    return { statusCode: 400, body: JSON.stringify({ error: "Missing instrument or 4 chart images" }) };
   }
 
   const minWin = Math.round((1 / (1 + rr)) * 100);
 
   const systemPrompt = `You are an expert swing trader and technical analyst. You perform strict 4-timeframe top-down analysis.
 
-CRITICAL: Only describe what you can actually see in the charts. Read prices directly from the price scales visible on the right side of each chart. Do not guess prices.
+CRITICAL PRICE READING RULES:
+- Read all prices from the RIGHT-HAND price scale of each chart
+- DO NOT use the O/H/L/C values in the top header bar — those are individual candle values
+- The current price is the highlighted label on the right side of the chart
 
 Your job is to give clear, simple trade signals that even a beginner can follow.
 
@@ -119,7 +114,7 @@ Signal: LONG / SHORT / NO TRADE
 
 If LONG or SHORT:
 - One sentence explaining the setup in plain english
-- Entry: [price read from chart] (only enter after [specific 1H confirmation])
+- Entry: [price from right scale] (only enter after [specific 1H confirmation])
 - Stop Loss: [price] (below liquidity, not the obvious swing low)
 - TP1: [price] — take off half your position (RR X:X)
 - TP2: [price] — take off a quarter (RR X:X)
@@ -130,8 +125,8 @@ If LONG or SHORT:
 
 If NO TRADE:
 - 2-3 sentences explaining why in plain english
-- Set an alert at: [exact price read from chart]
-- Look for: [exactly what to see — e.g. "a green 1H candle closing above X"]
+- Set an alert at: [exact price from right scale]
+- Look for: [exactly what to see]
 
 Confidence: X% (Structure X/10 | Timing X/10 | News risk X/10 | TF alignment X/10)`;
 
@@ -141,21 +136,15 @@ Confidence: X% (Structure X/10 | Timing X/10 | News risk X/10 | TF alignment X/1
   images.forEach((img, i) => {
     const base64 = img.split(",")[1];
     const mediaType = img.match(/data:([^;]+);/)[1];
-    content.push({
-      type: "image",
-      source: { type: "base64", media_type: mediaType, data: base64 },
-    });
-    content.push({
-      type: "text",
-      text: `${tfLabels[i]} (chart ${i + 1} of 4). Read all prices from the price scale on the right side of this chart.`,
-    });
+    content.push({ type: "image", source: { type: "base64", media_type: mediaType, data: base64 } });
+    content.push({ type: "text", text: `${tfLabels[i]} (chart ${i + 1} of 4). Read prices from the RIGHT-HAND scale only, not the header bar.` });
   });
 
   content.push({
     type: "text",
     text: `Instrument: ${instrument} | RR target: 1:${rr} (min ${minWin}% winrate) | News: ${news || "not specified"}${notes ? " | Context: " + notes : ""}
 
-Run the full 4-timeframe swing analysis. Read all prices directly from the chart scales.`,
+Run the full 4-timeframe swing analysis. All prices must be read from the right-hand scale of each chart.`,
   });
 
   try {
@@ -181,11 +170,7 @@ Run the full 4-timeframe swing analysis. Read all prices directly from the chart
 
     const data = await response.json();
     const text = data.content.map((b) => b.text || "").join("");
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ result: text }),
-    };
+    return { statusCode: 200, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ result: text }) };
   } catch (err) {
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
