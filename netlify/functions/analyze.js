@@ -15,8 +15,87 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid request body" }) };
   }
 
-  const { instrument, rr, news, notes, images } = body;
+  const { type, instrument, rr, news, notes, images, updateImage, previousAnalysis } = body;
 
+  // ─── FOLLOW-UP UPDATE ───────────────────────────────────────────────────────
+  if (type === "followup") {
+    if (!updateImage) {
+      return { statusCode: 400, body: JSON.stringify({ error: "No screenshot provided" }) };
+    }
+
+    const base64 = updateImage.split(",")[1];
+    const mediaType = updateImage.match(/data:([^;]+);/)[1];
+
+    const systemPrompt = `You are an expert swing trader. The user previously received a swing trade analysis and is now sending a fresh 1H screenshot as a follow-up update.
+
+Your job: look at the new 1H screenshot and give a short, clear update. Plain english only.
+
+If the setup has formed and it's time to enter:
+- Say YES, enter now
+- Entry: [price]
+- Stop Loss: [price]
+- TP1 / TP2 / TP3: [prices]
+- One line on what to watch
+
+If the setup has NOT formed yet:
+- Say not yet, still waiting
+- Tell them exactly what they still need to see
+- Give the updated alert level to watch
+
+If the setup has been invalidated:
+- Say the setup is off
+- Explain in one sentence why
+- Tell them what to look for next if anything
+
+Keep it short. No fluff. 3-8 lines max.`;
+
+    const content = [
+      { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
+      {
+        type: "text",
+        text: `Fresh 1H screenshot for ${instrument}.
+
+Previous analysis summary:
+${previousAnalysis || "No previous analysis provided."}
+
+Has the setup formed? Give me a short update.`,
+      },
+    ];
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 600,
+          system: systemPrompt,
+          messages: [{ role: "user", content }],
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        return { statusCode: response.status, body: JSON.stringify({ error: err }) };
+      }
+
+      const data = await response.json();
+      const text = data.content.map((b) => b.text || "").join("");
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ result: text }),
+      };
+    } catch (err) {
+      return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    }
+  }
+
+  // ─── INITIAL ANALYSIS ────────────────────────────────────────────────────────
   if (!instrument || !images || images.length !== 4) {
     return {
       statusCode: 400,
@@ -47,17 +126,17 @@ If LONG or SHORT:
 - Entry: [price] (only enter after [1H confirmation condition])
 - Stop Loss: [price] (below liquidity, not the obvious swing low)
 - TP1: [price] — take off half your position (RR X:X)
-- TP2: [price] — take off a quarter (RR X:X)  
+- TP2: [price] — take off a quarter (RR X:X)
 - TP3: [price] — let the last quarter run (RR X:X)
 - Once TP1 hits: move stop to entry — you can't lose now
 - Suggested hold: X-X days
-- ⚠ Risk: [one line]
+- Risk: [one line]
 
 If NO TRADE:
 - 2-3 sentences explaining why in plain english
-- 🔔 Set an alert at: [exact price]
-- Look for: [exactly what they should see — e.g. "a green 1H candle closing above X"]
-- When that happens: paste a fresh 1H screenshot and I'll reassess
+- Set an alert at: [exact price]
+- Look for: [exactly what they should see]
+- When that happens: upload a fresh 1H screenshot using the Update button below
 
 Confidence: X% (Structure X/10 | Timing X/10 | News risk X/10 | TF alignment X/10)`;
 
