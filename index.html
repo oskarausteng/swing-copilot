@@ -97,13 +97,26 @@
     .loading-text { font-size: 13px; color: var(--text-tertiary); }
     .error-box { margin-top: 12px; padding: 12px 14px; background: #FEE2E2; border: 1px solid #FCA5A5; border-radius: var(--radius-sm); font-size: 12px; color: #7F1D1D; display: none; }
     .error-box.visible { display: block; }
-    .followup-section { display: none; margin-top: 16px; }
-    .followup-section.visible { display: block; }
-    .followup-card { background: var(--bg-card); border: 1.5px solid var(--green); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
-    .followup-header { background: var(--green); padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
-    .followup-header i { color: white; font-size: 16px; }
-    .followup-title { font-size: 13px; font-weight: 600; color: white; }
-    .followup-body { padding: 14px; }
+
+    /* ── Monitoring section ── */
+    .monitor-section { display: none; margin-top: 16px; }
+    .monitor-section.visible { display: block; }
+
+    /* Conversation history */
+    .convo-history { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+    .convo-entry { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+    .convo-entry-header { padding: 6px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; gap: 6px; }
+    .convo-entry-header.update { background: #F0FDF4; color: var(--green); border-bottom: 1px solid var(--border); }
+    .convo-entry-header.fresh-charts { background: #FEF3C7; color: #78350F; border-bottom: 1px solid var(--border); }
+    .convo-entry-body { padding: 10px 12px; font-size: 12px; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; background: var(--bg-card); }
+
+    /* Upload 1H update */
+    .monitor-card { background: var(--bg-card); border: 1.5px solid var(--green); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .monitor-header { background: var(--green); padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
+    .monitor-header i { color: white; font-size: 16px; }
+    .monitor-title { font-size: 13px; font-weight: 600; color: white; }
+    .monitor-sub { font-size: 11px; color: #A8D5BF; margin-top: 2px; }
+    .monitor-body { padding: 14px; }
     .followup-upload-zone { border: 2px dashed var(--green-mid); border-radius: var(--radius-sm); padding: 20px 8px; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--green-light); min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; user-select: none; }
     .followup-upload-zone:hover { border-color: var(--green); background: #D1FAE5; }
     .followup-upload-zone.loaded { border-style: solid; border-color: var(--green); }
@@ -113,9 +126,22 @@
     .btn-update { width: 100%; padding: 13px; border: none; border-radius: var(--radius); background: var(--green); color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
     .btn-update:hover:not(:disabled) { background: var(--green-dark); }
     .btn-update:disabled { background: var(--border); color: var(--text-tertiary); cursor: not-allowed; }
-    .update-result { display: none; margin-top: 12px; padding: 14px; background: var(--green-light); border: 1.5px solid var(--green); border-radius: var(--radius); font-size: 13px; color: var(--green-text); line-height: 1.8; white-space: pre-wrap; }
-    .update-result.visible { display: block; }
-    .update-result-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--green); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+
+    /* Fresh charts request */
+    .fresh-charts-card { display: none; background: var(--bg-card); border: 1.5px solid #F59E0B; border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+    .fresh-charts-card.visible { display: block; }
+    .fresh-charts-header { background: #FEF3C7; padding: 10px 14px; font-size: 12px; font-weight: 700; color: #78350F; display: flex; align-items: center; gap: 8px; }
+    .fresh-charts-body { padding: 14px; }
+    .fresh-upload-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
+    .fresh-zone { border: 2px dashed #F59E0B; border-radius: var(--radius-sm); padding: 12px 6px; text-align: center; cursor: pointer; transition: all 0.15s; background: #FFFBEB; min-height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; user-select: none; }
+    .fresh-zone:hover { border-color: #D97706; }
+    .fresh-zone.loaded { border-style: solid; border-color: #D97706; background: #FEF3C744; }
+    .fresh-zone i { font-size: 20px; color: #F59E0B; }
+    .fresh-zone-label { font-size: 11px; font-weight: 600; color: #78350F; }
+    .btn-fresh-submit { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: #D97706; color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-fresh-submit:hover:not(:disabled) { background: #B45309; }
+    .btn-fresh-submit:disabled { background: var(--border); color: var(--text-tertiary); cursor: not-allowed; }
+
     .footer { margin-top: 32px; padding: 12px; font-size: 11px; color: var(--text-tertiary); text-align: center; line-height: 1.6; border-top: 1px solid var(--border); }
   </style>
 </head>
@@ -125,6 +151,8 @@
   <input type="file" accept="image/*" id="file4h" style="display:none;" />
   <input type="file" accept="image/*" id="file1h" style="display:none;" />
   <input type="file" accept="image/*" id="fileUpdate" style="display:none;" />
+  <input type="file" accept="image/*" id="fileFreshD"  style="display:none;" />
+  <input type="file" accept="image/*" id="fileFresh4h" style="display:none;" />
 
   <div class="container">
     <div class="header">
@@ -133,7 +161,7 @@
         <h1>Swing Copilot</h1>
         <span class="header-badge">📈 SWING ONLY</span>
       </div>
-      <p>Upload 4 chart screenshots, hit Analyze — get a clear signal instantly.</p>
+      <p>Upload 4 charts to start. After that, just keep sending 1H updates — Claude remembers the setup.</p>
     </div>
 
     <div class="disclaimer-wrap">
@@ -150,57 +178,60 @@
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-light);">
           <div class="rule-row"><div class="rule-dot"></div><div><strong>Price scale visible on right</strong> — no scale = rejected.</div></div>
           <div class="rule-row"><div class="rule-dot"></div><div><strong>No indicators covering candles</strong> — MAs/volume fine, RSI/MACD over price is not.</div></div>
-          <div class="rule-row"><div class="rule-dot"></div><div><strong>Same broker across all 4 charts.</strong></div></div>
+          <div class="rule-row"><div class="rule-dot"></div><div><strong>Same broker across all charts.</strong></div></div>
         </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">Instrument</div>
-      <div class="instrument-grid" id="instrumentGrid"></div>
-      <input type="text" class="custom-input" id="customInstrument" placeholder="Or type custom ticker (e.g. GBP/JPY, AAPL...)" style="margin-top:8px;" />
-      <div class="selected-row" id="selectedRow"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Risk : Reward Target</div>
-      <div class="rr-top">
-        <div>
-          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:2px;">Target</div>
-          <div class="rr-big" id="rrDisplay">1 : 3</div>
-          <div class="rr-badge" id="rrBadge">Selected: 1:3</div>
-        </div>
-        <div class="rr-stats">
-          <div><div class="rr-stat-label">Min winrate</div><div class="rr-stat-val" id="rrWinrate" style="color:#059669;">25%</div></div>
-          <div><div class="rr-stat-label">Profit / $100 risk</div><div class="rr-stat-val" id="rrProfit">$300</div></div>
-        </div>
+    <!-- Setup form — hidden once analysis starts -->
+    <div id="setupForm">
+      <div class="card">
+        <div class="card-title">Instrument</div>
+        <div class="instrument-grid" id="instrumentGrid"></div>
+        <input type="text" class="custom-input" id="customInstrument" placeholder="Or type custom ticker (e.g. GBP/JPY, AAPL...)" style="margin-top:8px;" />
+        <div class="selected-row" id="selectedRow"></div>
       </div>
-      <input type="range" id="rrSlider" min="2" max="10" step="1" value="3" />
-      <div class="rr-labels"><span>1:2 higher winrate</span><span>1:10 lower winrate</span></div>
-      <div class="rr-warning" id="rrWarning" style="display:none;"></div>
-    </div>
 
-    <div class="card">
-      <div class="card-title">Trade Context</div>
-      <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;">News environment this week</div>
-      <div class="tag-row" id="newsTags">
-        <span class="tag" data-val="high-impact">🔴 High impact</span>
-        <span class="tag" data-val="medium-impact">🟡 Medium impact</span>
-        <span class="tag" data-val="quiet">🟢 Quiet week</span>
-        <span class="tag" data-val="unknown">❓ Not sure</span>
+      <div class="card">
+        <div class="card-title">Risk : Reward Target</div>
+        <div class="rr-top">
+          <div>
+            <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:2px;">Target</div>
+            <div class="rr-big" id="rrDisplay">1 : 3</div>
+            <div class="rr-badge" id="rrBadge">Selected: 1:3</div>
+          </div>
+          <div class="rr-stats">
+            <div><div class="rr-stat-label">Min winrate</div><div class="rr-stat-val" id="rrWinrate" style="color:#059669;">25%</div></div>
+            <div><div class="rr-stat-label">Profit / $100 risk</div><div class="rr-stat-val" id="rrProfit">$300</div></div>
+          </div>
+        </div>
+        <input type="range" id="rrSlider" min="2" max="10" step="1" value="3" />
+        <div class="rr-labels"><span>1:2 higher winrate</span><span>1:10 lower winrate</span></div>
+        <div class="rr-warning" id="rrWarning" style="display:none;"></div>
       </div>
-      <textarea id="contextNotes" placeholder="Optional: 'FOMC Wednesday', 'NFP Friday', 'near all-time high'..."></textarea>
-    </div>
 
-    <div class="card">
-      <div class="card-title">4 Chart Screenshots — tap each to upload</div>
-      <div class="upload-grid" id="uploadGrid"></div>
-    </div>
+      <div class="card">
+        <div class="card-title">Trade Context</div>
+        <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;">News environment this week</div>
+        <div class="tag-row" id="newsTags">
+          <span class="tag" data-val="high-impact">🔴 High impact</span>
+          <span class="tag" data-val="medium-impact">🟡 Medium impact</span>
+          <span class="tag" data-val="quiet">🟢 Quiet week</span>
+          <span class="tag" data-val="unknown">❓ Not sure</span>
+        </div>
+        <textarea id="contextNotes" placeholder="Optional: 'FOMC Wednesday', 'NFP Friday', 'near all-time high'..."></textarea>
+      </div>
 
-    <button class="btn-primary" id="analyzeBtn" disabled>
-      <i class="ti ti-brain"></i>
-      <span id="analyzeBtnText">Select an instrument to begin</span>
-    </button>
+      <div class="card">
+        <div class="card-title">4 Chart Screenshots — tap each to upload</div>
+        <div class="upload-grid" id="uploadGrid"></div>
+      </div>
+
+      <button class="btn-primary" id="analyzeBtn" disabled>
+        <i class="ti ti-brain"></i>
+        <span id="analyzeBtnText">Select an instrument to begin</span>
+      </button>
+    </div>
 
     <div class="error-box" id="errorBox"></div>
 
@@ -209,21 +240,53 @@
       <div class="loading-text" id="loadingText">Analyzing your charts...</div>
     </div>
 
+    <!-- Initial result -->
     <div class="result-card" id="resultCard">
       <div class="result-header" id="resultHeader"></div>
       <div class="result-body" id="resultBody"></div>
-      <div style="padding:0 16px 16px;">
-        <button class="btn-secondary" id="newAnalysisBtn">↩ New analysis</button>
-      </div>
     </div>
 
-    <div class="followup-section" id="followupSection">
-      <div class="followup-card">
-        <div class="followup-header">
-          <i class="ti ti-refresh"></i>
-          <div class="followup-title">Price moved? Upload a fresh 1H screenshot for an update</div>
+    <!-- Monitoring section — shown after initial analysis -->
+    <div class="monitor-section" id="monitorSection">
+
+      <!-- Conversation history -->
+      <div class="convo-history" id="convoHistory"></div>
+
+      <!-- Fresh charts request card — shown when AI asks for it -->
+      <div class="fresh-charts-card" id="freshChartsCard">
+        <div class="fresh-charts-header">
+          <i class="ti ti-refresh" style="font-size:14px;"></i>
+          Claude needs fresh higher timeframe charts
         </div>
-        <div class="followup-body">
+        <div class="fresh-charts-body">
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">Upload a fresh Daily and 4H screenshot so Claude can reassess the structure.</div>
+          <div class="fresh-upload-grid">
+            <div class="fresh-zone" id="freshZoneD" role="button" tabindex="0">
+              <i class="ti ti-photo"></i>
+              <div class="fresh-zone-label">Daily Chart</div>
+            </div>
+            <div class="fresh-zone" id="freshZone4h" role="button" tabindex="0">
+              <i class="ti ti-photo"></i>
+              <div class="fresh-zone-label">4H Chart</div>
+            </div>
+          </div>
+          <button class="btn-fresh-submit" id="freshSubmitBtn" disabled>
+            <i class="ti ti-send"></i>
+            <span id="freshSubmitText">Upload both charts first</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 1H update card -->
+      <div class="monitor-card">
+        <div class="monitor-header">
+          <i class="ti ti-refresh"></i>
+          <div>
+            <div class="monitor-title" id="monitorTitle">Monitoring — send a 1H update</div>
+            <div class="monitor-sub" id="monitorSub">Upload a fresh 1H screenshot anytime price moves</div>
+          </div>
+        </div>
+        <div class="monitor-body">
           <div class="followup-upload-zone" id="followupZone">
             <i class="ti ti-photo"></i>
             <div class="followup-upload-label">Tap to upload fresh 1H screenshot</div>
@@ -235,14 +298,15 @@
           </button>
         </div>
       </div>
-      <div class="loading" id="updateLoadingBox" style="padding:16px;">
-        <div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-        <div class="loading-text">Checking if the setup has formed...</div>
-      </div>
-      <div class="update-result" id="updateResult">
-        <div class="update-result-header"><i class="ti ti-clock" style="font-size:13px;"></i> Latest Update</div>
-        <div id="updateResultText"></div>
-      </div>
+
+      <button class="btn-secondary" id="newAnalysisBtn" style="margin-top:12px;">
+        ↩ Start a new analysis
+      </button>
+    </div>
+
+    <div class="loading" id="updateLoadingBox" style="padding:16px;display:none;">
+      <div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div class="loading-text">Checking the setup...</div>
     </div>
 
     <div class="footer">
@@ -269,15 +333,17 @@
       { key: '1h', fileId: 'file1h', label: '1H',     sub: '3-5 days' },
     ];
     const LOADING_MSGS = ['Reading Weekly structure...','Checking Daily trend...','Confirming 4H setup...','Evaluating 1H entry...','Grading signal quality...'];
+
     let instrument = '', rr = 3, newsCtx = '';
     let uploads = { W: null, D: null, '4h': null, '1h': null };
     let updateImageData = null;
-    let lastAnalysisText = '';
-    let lastAlertLevel = '';
-    let lastLookFor = '';
+    let freshD = null, fresh4h = null;
+    let sessionContext = '';
+    let conversationHistory = [];
     let disclaimerOpen = false;
     let msgTimer = null, msgIdx = 0;
 
+    // ── Instruments ──
     const grid = document.getElementById('instrumentGrid');
     INSTRUMENTS.forEach(inst => {
       const btn = document.createElement('button');
@@ -293,7 +359,6 @@
       });
       grid.appendChild(btn);
     });
-
     document.getElementById('customInstrument').addEventListener('input', function() {
       document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
       instrument = this.value.trim().toUpperCase();
@@ -301,6 +366,7 @@
       checkReady();
     });
 
+    // ── RR ──
     document.getElementById('rrSlider').addEventListener('input', function() { updateRR(+this.value); });
     function updateRR(val) {
       rr = val;
@@ -315,6 +381,7 @@
     }
     updateRR(3);
 
+    // ── News tags ──
     document.querySelectorAll('#newsTags .tag').forEach(t => {
       t.addEventListener('click', () => {
         document.querySelectorAll('#newsTags .tag').forEach(x => x.classList.remove('selected'));
@@ -323,6 +390,7 @@
       });
     });
 
+    // ── Initial upload zones ──
     const uploadGrid = document.getElementById('uploadGrid');
     TF_SLOTS.forEach(slot => {
       const zone = document.createElement('div');
@@ -370,12 +438,14 @@
       }
     }
 
+    // ── Disclaimer ──
     document.getElementById('disclaimerToggle').addEventListener('click', () => {
       disclaimerOpen = !disclaimerOpen;
       document.getElementById('disclaimerContent').className = 'disclaimer-content' + (disclaimerOpen ? ' open' : '');
       document.getElementById('disclaimerArrow').textContent = disclaimerOpen ? '▲ Hide' : '▼ Show';
     });
 
+    // ── Follow-up upload ──
     const followupZone = document.getElementById('followupZone');
     const fileUpdate = document.getElementById('fileUpdate');
     followupZone.addEventListener('click', () => fileUpdate.click());
@@ -385,20 +455,57 @@
       reader.onload = ev => {
         updateImageData = ev.target.result;
         followupZone.className = 'followup-upload-zone loaded';
-        followupZone.innerHTML = `<img style="width:100%;height:70px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${updateImageData}" /><div style="font-size:10px;color:var(--green-text);margin-top:4px;">✓ Screenshot loaded — tap to replace</div>`;
+        followupZone.innerHTML = `<img style="width:100%;height:70px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${updateImageData}" /><div style="font-size:10px;color:var(--green-text);margin-top:4px;">✓ Loaded — tap to replace</div>`;
         document.getElementById('updateBtn').disabled = false;
-        document.getElementById('updateBtnText').textContent = 'Send Update';
+        document.getElementById('updateBtnText').textContent = 'Send 1H Update';
       };
       reader.readAsDataURL(file);
       this.value = '';
     });
 
+    // ── Fresh chart zones ──
+    function setupFreshZone(zoneId, inputId, label, callback) {
+      const zone = document.getElementById(zoneId);
+      const inp = document.getElementById(inputId);
+      zone.addEventListener('click', () => inp.click());
+      zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
+      inp.addEventListener('change', function() {
+        const file = this.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          callback(ev.target.result);
+          zone.className = 'fresh-zone loaded';
+          zone.innerHTML = `<img style="width:100%;height:60px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${ev.target.result}" /><div style="font-size:10px;color:#78350F;margin-top:4px;">✓ ${label}</div>`;
+          checkFreshReady();
+        };
+        reader.readAsDataURL(file);
+        this.value = '';
+      });
+    }
+
+    setupFreshZone('freshZoneD', 'fileFreshD', 'Daily loaded', val => { freshD = val; });
+    setupFreshZone('freshZone4h', 'fileFresh4h', '4H loaded', val => { fresh4h = val; });
+
+    function checkFreshReady() {
+      const btn = document.getElementById('freshSubmitBtn');
+      const txt = document.getElementById('freshSubmitText');
+      if (freshD && fresh4h) {
+        btn.disabled = false;
+        txt.textContent = 'Submit Fresh Charts';
+      } else {
+        btn.disabled = true;
+        txt.textContent = 'Upload both charts first';
+      }
+    }
+
+    // ── Main analysis ──
     document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
+
     async function runAnalysis() {
       const notes = document.getElementById('contextNotes').value.trim();
-      setLoading(true); hideError();
+      setLoading(true, 'initial'); hideError();
       document.getElementById('resultCard').className = 'result-card';
-      document.getElementById('followupSection').className = 'followup-section';
+
       try {
         const res = await fetch('/.netlify/functions/analyze', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -406,65 +513,136 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Analysis failed');
-        lastAnalysisText = data.result;
-        showResult(data.result);
+
+        sessionContext = data.sessionContext || '';
+        conversationHistory = [];
+
+        showInitialResult(data.result);
       } catch (err) { showError(err.message); }
-      finally { setLoading(false); }
+      finally { setLoading(false, 'initial'); }
     }
 
-    document.getElementById('updateBtn').addEventListener('click', runUpdate);
-    async function runUpdate() {
-      document.getElementById('updateLoadingBox').className = 'loading visible';
-      document.getElementById('updateResult').className = 'update-result';
-      document.getElementById('updateBtn').disabled = true;
-      document.getElementById('updateBtnText').textContent = 'Checking...';
+    // ── Send 1H update ──
+    document.getElementById('updateBtn').addEventListener('click', sendUpdate);
+
+    async function sendUpdate() {
+      setLoading(true, 'update'); hideError();
+
       try {
         const res = await fetch('/.netlify/functions/analyze', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'followup', instrument, updateImage: updateImageData, previousAnalysis: lastAnalysisText, alertLevel: lastAlertLevel, lookFor: lastLookFor }),
+          body: JSON.stringify({ type: 'followup', instrument, updateImage: updateImageData, sessionContext, conversationHistory }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Update failed');
-        const newAlert = extractAlertLevel(data.result);
-        if (newAlert.level) { lastAlertLevel = newAlert.level; lastLookFor = newAlert.lookFor; }
-        document.getElementById('updateResultText').textContent = data.result;
-        document.getElementById('updateResult').className = 'update-result visible';
-        document.getElementById('updateResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        if (data.sessionContext) sessionContext = data.sessionContext;
+
+        // Add to conversation history (text only, no images — keeps context lean)
+        conversationHistory.push({ role: 'user', content: '[User sent a fresh 1H screenshot]' });
+        conversationHistory.push({ role: 'assistant', content: data.result });
+
+        // Keep history to last 10 exchanges max
+        if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-20);
+
+        addConvoEntry(data.result, 'update');
+
+        if (data.needsFreshCharts) {
+          document.getElementById('freshChartsCard').className = 'fresh-charts-card visible';
+          document.getElementById('freshChartsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Reset upload zone
         updateImageData = null;
         followupZone.className = 'followup-upload-zone';
-        followupZone.innerHTML = `<i class="ti ti-photo"></i><div class="followup-upload-label">Tap to upload another 1H screenshot</div><div class="followup-upload-sub">Keep monitoring the setup</div>`;
+        followupZone.innerHTML = `<i class="ti ti-photo"></i><div class="followup-upload-label">Tap to upload another 1H screenshot</div><div class="followup-upload-sub">Keep monitoring</div>`;
         document.getElementById('updateBtn').disabled = true;
         document.getElementById('updateBtnText').textContent = 'Upload a 1H screenshot first';
-      } catch (err) {
-        document.getElementById('updateResultText').textContent = '⚠ ' + err.message;
-        document.getElementById('updateResult').className = 'update-result visible';
-      } finally { document.getElementById('updateLoadingBox').className = 'loading'; }
+
+      } catch (err) { showError(err.message); }
+      finally { setLoading(false, 'update'); }
     }
 
-    function extractAlertLevel(text) {
-      const alertMatch = text.match(/alert at[:\s]+([0-9]+\.[0-9]+)/i) ||
-                         text.match(/alert[:\s]+([0-9]+\.[0-9]+)/i) ||
-                         text.match(/watch[:\s]+([0-9]+\.[0-9]+)/i);
-      const lookMatch  = text.match(/look for[:\s]+([^\n.]+)/i) ||
-                         text.match(/wait for[:\s]+([^\n.]+)/i);
-      return { level: alertMatch ? alertMatch[1] : '', lookFor: lookMatch ? lookMatch[1].trim() : '' };
+    // ── Submit fresh charts ──
+    document.getElementById('freshSubmitBtn').addEventListener('click', sendFreshCharts);
+
+    async function sendFreshCharts() {
+      setLoading(true, 'update'); hideError();
+
+      try {
+        // Send fresh daily + 4H as a context update
+        const freshMsg = '[User sent fresh Daily and 4H charts to update structure context]';
+        const res = await fetch('/.netlify/functions/analyze', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'followup',
+            instrument,
+            updateImage: freshD, // use daily as primary image
+            sessionContext,
+            conversationHistory: [
+              ...conversationHistory,
+              { role: 'user', content: 'Here are fresh Daily and 4H charts. Please update your higher timeframe context.' }
+            ]
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+
+        if (data.sessionContext) sessionContext = data.sessionContext;
+        conversationHistory.push({ role: 'user', content: 'Sent fresh Daily and 4H charts' });
+        conversationHistory.push({ role: 'assistant', content: data.result });
+
+        addConvoEntry(data.result, 'fresh-charts');
+        document.getElementById('freshChartsCard').className = 'fresh-charts-card';
+
+        // Reset fresh zones
+        freshD = null; fresh4h = null;
+        ['freshZoneD', 'freshZone4h'].forEach((id, i) => {
+          const labels = ['Daily Chart', '4H Chart'];
+          document.getElementById(id).className = 'fresh-zone';
+          document.getElementById(id).innerHTML = `<i class="ti ti-photo"></i><div class="fresh-zone-label">${labels[i]}</div>`;
+        });
+        checkFreshReady();
+
+      } catch (err) { showError(err.message); }
+      finally { setLoading(false, 'update'); }
     }
 
-    function setLoading(on) {
-      document.getElementById('loadingBox').className = on ? 'loading visible' : 'loading';
-      document.getElementById('analyzeBtn').disabled = on;
-      document.getElementById('analyzeBtnText').textContent = on ? 'Analyzing...' : 'Analyze ' + instrument;
-      if (on) {
-        msgIdx = 0;
-        document.getElementById('loadingText').textContent = LOADING_MSGS[0];
-        msgTimer = setInterval(() => { msgIdx = (msgIdx + 1) % LOADING_MSGS.length; document.getElementById('loadingText').textContent = LOADING_MSGS[msgIdx]; }, 2000);
-      } else { clearInterval(msgTimer); }
+    function addConvoEntry(text, type) {
+      const history = document.getElementById('convoHistory');
+      const entry = document.createElement('div');
+      entry.className = 'convo-entry';
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const headerLabel = type === 'fresh-charts' ? '🔄 Structure Update' : '📊 1H Update';
+      entry.innerHTML = `
+        <div class="convo-entry-header ${type}">
+          ${headerLabel} <span style="opacity:0.6;font-weight:400;margin-left:auto;">${timeStr}</span>
+        </div>
+        <div class="convo-entry-body">${text}</div>`;
+      history.appendChild(entry);
+      entry.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function showResult(text) {
-      const extracted = extractAlertLevel(text);
-      lastAlertLevel = extracted.level;
-      lastLookFor = extracted.lookFor;
+    function setLoading(on, target) {
+      if (target === 'initial') {
+        document.getElementById('loadingBox').className = on ? 'loading visible' : 'loading';
+        document.getElementById('analyzeBtn').disabled = on;
+        document.getElementById('analyzeBtnText').textContent = on ? 'Analyzing...' : 'Analyze ' + instrument;
+        if (on) {
+          msgIdx = 0;
+          document.getElementById('loadingText').textContent = LOADING_MSGS[0];
+          msgTimer = setInterval(() => { msgIdx = (msgIdx + 1) % LOADING_MSGS.length; document.getElementById('loadingText').textContent = LOADING_MSGS[msgIdx]; }, 2000);
+        } else { clearInterval(msgTimer); }
+      } else {
+        const lb = document.getElementById('updateLoadingBox');
+        lb.style.display = on ? 'block' : 'none';
+        document.getElementById('updateBtn').disabled = on;
+        document.getElementById('freshSubmitBtn').disabled = on;
+      }
+    }
+
+    function showInitialResult(text) {
       const upper = text.toUpperCase();
       let grade = 'C', signal = 'NO TRADE';
       const gm = upper.match(/GRADE[:\s]+([A-Z]+)/);
@@ -473,10 +651,14 @@
       else if (upper.match(/SIGNAL[:\s]+SHORT/)) signal = 'SHORT';
       if (upper.includes('REJECT')) { grade = 'REJECT'; signal = 'NO TRADE'; }
       const sigCls = signal === 'LONG' ? 'sig-long' : signal === 'SHORT' ? 'sig-short' : 'sig-none';
+
       document.getElementById('resultHeader').innerHTML = `<span class="grade-badge grade-${grade}">Grade ${grade}</span><span class="signal-pill ${sigCls}">${signal}</span><span style="font-size:12px;color:var(--text-tertiary);margin-left:4px;">${instrument} · 1:${rr} RR</span>`;
       document.getElementById('resultBody').textContent = text;
       document.getElementById('resultCard').className = 'result-card visible';
-      document.getElementById('followupSection').className = 'followup-section visible';
+
+      // Hide setup form, show monitoring
+      document.getElementById('setupForm').style.display = 'none';
+      document.getElementById('monitorSection').className = 'monitor-section visible';
       document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -486,13 +668,18 @@
     document.getElementById('newAnalysisBtn').addEventListener('click', () => {
       uploads = { W: null, D: null, '4h': null, '1h': null };
       TF_SLOTS.forEach(s => renderZone(s, null));
+      sessionContext = ''; conversationHistory = [];
+      updateImageData = null; freshD = null; fresh4h = null;
       document.getElementById('resultCard').className = 'result-card';
-      document.getElementById('followupSection').className = 'followup-section';
-      document.getElementById('updateResult').className = 'update-result';
-      updateImageData = null;
-      lastAnalysisText = '';
-      lastAlertLevel = '';
-      lastLookFor = '';
+      document.getElementById('monitorSection').className = 'monitor-section';
+      document.getElementById('setupForm').style.display = '';
+      document.getElementById('convoHistory').innerHTML = '';
+      document.getElementById('freshChartsCard').className = 'fresh-charts-card';
+      document.getElementById('updateBtn').disabled = true;
+      document.getElementById('updateBtnText').textContent = 'Upload a 1H screenshot first';
+      followupZone.className = 'followup-upload-zone';
+      followupZone.innerHTML = `<i class="ti ti-photo"></i><div class="followup-upload-label">Tap to upload fresh 1H screenshot</div><div class="followup-upload-sub">Supports PNG, JPG</div>`;
+      hideError();
       checkReady();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
