@@ -15,9 +15,9 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid request body" }) };
   }
 
-  const { type, instrument, rr, news, notes, images, updateImage, previousAnalysis } = body;
+  const { type, instrument, rr, news, notes, images, updateImage, previousAnalysis, alertLevel, lookFor } = body;
 
-  // ─── FOLLOW-UP UPDATE ───────────────────────────────────────────────────────
+  // ─── FOLLOW-UP UPDATE ────────────────────────────────────────────────────────
   if (type === "followup") {
     if (!updateImage) {
       return { statusCode: 400, body: JSON.stringify({ error: "No screenshot provided" }) };
@@ -26,39 +26,33 @@ exports.handler = async function (event) {
     const base64 = updateImage.split(",")[1];
     const mediaType = updateImage.match(/data:([^;]+);/)[1];
 
-    const systemPrompt = `You are an expert swing trader. The user previously received a swing trade analysis and is now sending a fresh 1H screenshot as a follow-up update.
+    const systemPrompt = `You are an expert swing trader giving a follow-up update on a specific trade setup.
 
-Your job: look at the new 1H screenshot and give a short, clear update. Plain english only.
+CRITICAL: Only describe what you can actually see in the chart image provided. Do not guess or infer the current price — read it directly from the price scale on the right side of the chart. If you cannot read an exact price, say approximately X based on the scale.
 
-If the setup has formed and it's time to enter:
-- Say YES, enter now
-- Entry: [price]
-- Stop Loss: [price]
-- TP1 / TP2 / TP3: [prices]
-- One line on what to watch
+Keep your response short — 4 to 8 lines max. Plain english only. No fluff.
 
-If the setup has NOT formed yet:
-- Say not yet, still waiting
-- Tell them exactly what they still need to see
-- Give the updated alert level to watch
+Structure:
+Line 1: YES — enter now / NOT YET — still waiting / SETUP OFF — invalidated
+Line 2-3: What you actually see on the chart right now
+Line 4-5: What to do next (enter with levels, or new alert level to watch)`;
 
-If the setup has been invalidated:
-- Say the setup is off
-- Explain in one sentence why
-- Tell them what to look for next if anything
-
-Keep it short. No fluff. 3-8 lines max.`;
+    const alertContext = alertLevel
+      ? `Original alert level: ${alertLevel}\nWhat to look for: ${lookFor || "confirmation candle"}\n\n`
+      : "";
 
     const content = [
-      { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
+      {
+        type: "image",
+        source: { type: "base64", media_type: mediaType, data: base64 },
+      },
       {
         type: "text",
-        text: `Fresh 1H screenshot for ${instrument}.
+        text: `${alertContext}This is a fresh 1H screenshot for ${instrument}.
 
-Previous analysis summary:
-${previousAnalysis || "No previous analysis provided."}
+Look at the chart carefully. Read the current price directly from the right-hand price scale.
 
-Has the setup formed? Give me a short update.`,
+Has the setup formed? Give me a short update based only on what you can see in this chart.`,
       },
     ];
 
@@ -72,7 +66,7 @@ Has the setup formed? Give me a short update.`,
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-5-20250929",
-          max_tokens: 600,
+          max_tokens: 400,
           system: systemPrompt,
           messages: [{ role: "user", content }],
         }),
@@ -107,6 +101,8 @@ Has the setup formed? Give me a short update.`,
 
   const systemPrompt = `You are an expert swing trader and technical analyst. You perform strict 4-timeframe top-down analysis.
 
+CRITICAL: Only describe what you can actually see in the charts. Read prices directly from the price scales visible on the right side of each chart. Do not guess prices.
+
 Your job is to give clear, simple trade signals that even a beginner can follow.
 
 ANALYSIS PROTOCOL:
@@ -116,14 +112,14 @@ ANALYSIS PROTOCOL:
 4. 1H — specific entry trigger? Flag if no clear trigger.
 5. Only issue LONG or SHORT if ALL FOUR timeframes align. Otherwise NO TRADE.
 
-RESPONSE FORMAT — keep it short and plain english:
+RESPONSE FORMAT — short and plain english:
 
 SIGNAL QUALITY GRADE: A / B / C / REJECT
 Signal: LONG / SHORT / NO TRADE
 
 If LONG or SHORT:
 - One sentence explaining the setup in plain english
-- Entry: [price] (only enter after [1H confirmation condition])
+- Entry: [price read from chart] (only enter after [specific 1H confirmation])
 - Stop Loss: [price] (below liquidity, not the obvious swing low)
 - TP1: [price] — take off half your position (RR X:X)
 - TP2: [price] — take off a quarter (RR X:X)
@@ -134,9 +130,8 @@ If LONG or SHORT:
 
 If NO TRADE:
 - 2-3 sentences explaining why in plain english
-- Set an alert at: [exact price]
-- Look for: [exactly what they should see]
-- When that happens: upload a fresh 1H screenshot using the Update button below
+- Set an alert at: [exact price read from chart]
+- Look for: [exactly what to see — e.g. "a green 1H candle closing above X"]
 
 Confidence: X% (Structure X/10 | Timing X/10 | News risk X/10 | TF alignment X/10)`;
 
@@ -146,15 +141,21 @@ Confidence: X% (Structure X/10 | Timing X/10 | News risk X/10 | TF alignment X/1
   images.forEach((img, i) => {
     const base64 = img.split(",")[1];
     const mediaType = img.match(/data:([^;]+);/)[1];
-    content.push({ type: "image", source: { type: "base64", media_type: mediaType, data: base64 } });
-    content.push({ type: "text", text: `${tfLabels[i]} (chart ${i + 1} of 4).` });
+    content.push({
+      type: "image",
+      source: { type: "base64", media_type: mediaType, data: base64 },
+    });
+    content.push({
+      type: "text",
+      text: `${tfLabels[i]} (chart ${i + 1} of 4). Read all prices from the price scale on the right side of this chart.`,
+    });
   });
 
   content.push({
     type: "text",
     text: `Instrument: ${instrument} | RR target: 1:${rr} (min ${minWin}% winrate) | News: ${news || "not specified"}${notes ? " | Context: " + notes : ""}
 
-Run the full 4-timeframe swing analysis now.`,
+Run the full 4-timeframe swing analysis. Read all prices directly from the chart scales.`,
   });
 
   try {
