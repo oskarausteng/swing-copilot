@@ -7,63 +7,34 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --green: #1D6B4E;
-      --green-light: #E6F5EE;
-      --green-mid: #1D9E75;
-      --green-dark: #0F4A32;
-      --green-text: #085041;
-      --text-primary: #111827;
-      --text-secondary: #4B5563;
-      --text-tertiary: #9CA3AF;
-      --bg: #F9FAFB;
-      --bg-card: #FFFFFF;
-      --border: #E5E7EB;
-      --border-light: #F3F4F6;
-      --warning-bg: #FFFBEB;
-      --warning-text: #92400E;
-      --warning-border: #FCD34D;
-      --radius: 10px;
-      --radius-sm: 6px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+      --green: #1D6B4E; --green-light: #E6F5EE; --green-mid: #1D9E75; --green-dark: #0F4A32; --green-text: #085041;
+      --text-primary: #111827; --text-secondary: #4B5563; --text-tertiary: #9CA3AF;
+      --bg: #F9FAFB; --bg-card: #FFFFFF; --border: #E5E7EB; --border-light: #F3F4F6;
+      --warning-bg: #FFFBEB; --warning-text: #92400E; --warning-border: #FCD34D;
+      --radius: 10px; --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
     }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text-primary);
-      min-height: 100vh;
-    }
-
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; }
     .container { max-width: 680px; margin: 0 auto; padding: 24px 16px 60px; }
-
-    /* Header */
     .header { margin-bottom: 28px; }
     .header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
     .header-icon { width: 36px; height: 36px; background: var(--green); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
-    .header h1 { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+    .header h1 { font-size: 20px; font-weight: 700; }
     .header-badge { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: var(--green-light); color: var(--green-text); border: 1px solid var(--green); }
     .header p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
-
-    /* Card */
     .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); }
     .card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-tertiary); margin-bottom: 12px; }
-
-    /* Instrument grid */
     .instrument-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
     .inst-btn { padding: 10px 4px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text-secondary); font-size: 11px; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.15s; }
-    .inst-btn:hover { border-color: var(--green-mid); color: var(--text-primary); background: var(--green-light); }
+    .inst-btn:hover { border-color: var(--green-mid); background: var(--green-light); }
     .inst-btn.active { background: var(--green-light); border-color: var(--green); color: var(--green-text); font-weight: 700; border-width: 2px; }
     .inst-btn i { font-size: 14px; display: block; margin-bottom: 3px; }
     .custom-input { width: 100%; font-size: 13px; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-primary); outline: none; transition: border-color 0.15s; }
     .custom-input:focus { border-color: var(--green); }
     .selected-row { font-size: 12px; font-weight: 600; color: var(--green); margin-top: 6px; min-height: 18px; }
-
-    /* RR Slider */
     .rr-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-    .rr-big { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+    .rr-big { font-size: 28px; font-weight: 700; line-height: 1; }
     .rr-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--green-light); color: var(--green-text); border: 1px solid var(--green); margin-top: 4px; display: inline-block; }
     .rr-stats { display: flex; gap: 20px; text-align: right; }
     .rr-stat-label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 2px; }
@@ -71,16 +42,12 @@
     input[type="range"] { width: 100%; accent-color: var(--green); margin: 6px 0; }
     .rr-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-tertiary); }
     .rr-warning { font-size: 11px; padding: 6px 10px; border-radius: var(--radius-sm); margin-top: 8px; background: var(--warning-bg); color: var(--warning-text); border: 1px solid var(--warning-border); }
-
-    /* Tags */
     .tag-row { display: flex; gap: 6px; flex-wrap: wrap; }
     .tag { font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text-tertiary); cursor: pointer; transition: all 0.15s; }
     .tag:hover { border-color: var(--green-mid); color: var(--green-text); }
     .tag.selected { background: var(--green-light); border-color: var(--green); color: var(--green-text); font-weight: 700; }
     textarea { width: 100%; font-size: 12px; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-primary); resize: vertical; min-height: 52px; font-family: inherit; line-height: 1.5; outline: none; margin-top: 10px; transition: border-color 0.15s; }
     textarea:focus { border-color: var(--green); }
-
-    /* Upload zones */
     .upload-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .upload-zone { border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 16px 8px; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--bg); min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; user-select: none; }
     .upload-zone:hover { border-color: var(--green-mid); background: var(--green-light); }
@@ -91,8 +58,6 @@
     .upload-thumb { width: 100%; height: 65px; object-fit: cover; border-radius: 4px; display: block; pointer-events: none; }
     .upload-check { font-size: 10px; color: var(--green-text); background: var(--green-light); border: 1px solid var(--green); border-radius: 4px; padding: 2px 7px; }
     .upload-replace { font-size: 10px; color: var(--text-tertiary); }
-
-    /* Disclaimer accordion */
     .disclaimer-wrap { border: 1.5px solid var(--green); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
     .disclaimer-toggle { padding: 10px 14px; background: var(--green-light); display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
     .disclaimer-toggle-left { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--green-text); }
@@ -101,24 +66,17 @@
     .disclaimer-content.open { display: block; }
     .disclaimer-resp { font-size: 12px; color: var(--text-secondary); line-height: 1.6; padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); border-left: 3px solid var(--green); margin-bottom: 14px; }
     .tf-row { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); }
-    .tf-row:last-of-type { border-bottom: none; margin-bottom: 4px; padding-bottom: 0; }
+    .tf-row:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
     .tf-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .tf-w { background: #DBEAFE; color: #1E3A8A; }
-    .tf-d { background: #D1FAE5; color: #064E3B; }
-    .tf-4h { background: #FEF3C7; color: #78350F; }
-    .tf-1h { background: #FEE2E2; color: #7F1D1D; }
+    .tf-w { background: #DBEAFE; color: #1E3A8A; } .tf-d { background: #D1FAE5; color: #064E3B; } .tf-4h { background: #FEF3C7; color: #78350F; } .tf-1h { background: #FEE2E2; color: #7F1D1D; }
     .tf-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
     .rule-row { display: flex; gap: 8px; font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 5px; }
     .rule-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); flex-shrink: 0; margin-top: 6px; }
-
-    /* Buttons */
     .btn-primary { width: 100%; padding: 14px; border: none; border-radius: var(--radius); background: var(--green); color: white; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: var(--shadow-md); }
-    .btn-primary:hover:not(:disabled) { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 12px rgba(29,107,78,0.25); }
+    .btn-primary:hover:not(:disabled) { background: var(--green-dark); transform: translateY(-1px); }
     .btn-primary:disabled { background: var(--border); color: var(--text-tertiary); cursor: not-allowed; box-shadow: none; transform: none; }
     .btn-secondary { width: 100%; padding: 12px; border: 2px solid var(--green); border-radius: var(--radius); background: transparent; color: var(--green); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
     .btn-secondary:hover { background: var(--green-light); }
-
-    /* Result card */
     .result-card { background: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-top: 16px; box-shadow: var(--shadow-md); display: none; }
     .result-card.visible { display: block; }
     .result-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: var(--bg); }
@@ -128,38 +86,36 @@
     .grade-C { background: #FEE2E2; color: #7F1D1D; border: 1.5px solid #EF4444; }
     .grade-REJECT { background: #FEE2E2; color: #7F1D1D; border: 1.5px solid #DC2626; }
     .signal-pill { font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
-    .sig-long  { background: #D1FAE5; color: #064E3B; }
-    .sig-short { background: #FEE2E2; color: #7F1D1D; }
-    .sig-none  { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
+    .sig-long { background: #D1FAE5; color: #064E3B; } .sig-short { background: #FEE2E2; color: #7F1D1D; } .sig-none { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
     .result-body { padding: 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.8; white-space: pre-wrap; }
-
-    /* Loading */
     .loading { display: none; text-align: center; padding: 28px; }
     .loading.visible { display: block; }
     .loading-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 1.2s ease-in-out infinite; }
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
+    .dot:nth-child(2) { animation-delay: 0.2s; } .dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes pulse { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
     .loading-text { font-size: 13px; color: var(--text-tertiary); }
-
-    /* Follow-up */
-    .followup-card { background: var(--bg-card); border: 1.5px solid var(--green); border-radius: var(--radius); overflow: hidden; margin-top: 12px; display: none; }
-    .followup-card.visible { display: block; }
-    .followup-header { background: var(--green); padding: 10px 14px; }
-    .followup-title { font-size: 13px; font-weight: 600; color: white; }
-    .followup-sub { font-size: 11px; color: #A8D5BF; margin-top: 2px; }
-    .followup-body { padding: 14px; background: var(--green-light); }
-    .followup-label { font-size: 11px; font-weight: 600; color: var(--green-text); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-    .followup-hint { font-size: 11px; color: var(--green); margin-top: 8px; line-height: 1.5; }
-    .btn-followup-send { width: 100%; padding: 11px; border: none; border-radius: var(--radius-sm); background: var(--green); color: white; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.15s; }
-    .btn-followup-send:hover { background: var(--green-dark); }
-
-    /* Error */
     .error-box { margin-top: 12px; padding: 12px 14px; background: #FEE2E2; border: 1px solid #FCA5A5; border-radius: var(--radius-sm); font-size: 12px; color: #7F1D1D; display: none; }
     .error-box.visible { display: block; }
-
-    /* Footer */
+    .followup-section { display: none; margin-top: 16px; }
+    .followup-section.visible { display: block; }
+    .followup-card { background: var(--bg-card); border: 1.5px solid var(--green); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .followup-header { background: var(--green); padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
+    .followup-header i { color: white; font-size: 16px; }
+    .followup-title { font-size: 13px; font-weight: 600; color: white; }
+    .followup-body { padding: 14px; }
+    .followup-upload-zone { border: 2px dashed var(--green-mid); border-radius: var(--radius-sm); padding: 20px 8px; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--green-light); min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; user-select: none; }
+    .followup-upload-zone:hover { border-color: var(--green); background: #D1FAE5; }
+    .followup-upload-zone.loaded { border-style: solid; border-color: var(--green); }
+    .followup-upload-zone i { font-size: 24px; color: var(--green); }
+    .followup-upload-label { font-size: 12px; font-weight: 600; color: var(--green-text); }
+    .followup-upload-sub { font-size: 11px; color: var(--green); }
+    .btn-update { width: 100%; padding: 13px; border: none; border-radius: var(--radius); background: var(--green); color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+    .btn-update:hover:not(:disabled) { background: var(--green-dark); }
+    .btn-update:disabled { background: var(--border); color: var(--text-tertiary); cursor: not-allowed; }
+    .update-result { display: none; margin-top: 12px; padding: 14px; background: var(--green-light); border: 1.5px solid var(--green); border-radius: var(--radius); font-size: 13px; color: var(--green-text); line-height: 1.8; white-space: pre-wrap; }
+    .update-result.visible { display: block; }
+    .update-result-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--green); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
     .footer { margin-top: 32px; padding: 12px; font-size: 11px; color: var(--text-tertiary); text-align: center; line-height: 1.6; border-top: 1px solid var(--border); }
   </style>
 </head>
@@ -168,56 +124,37 @@
   <input type="file" accept="image/*" id="fileD"  style="display:none;" />
   <input type="file" accept="image/*" id="file4h" style="display:none;" />
   <input type="file" accept="image/*" id="file1h" style="display:none;" />
+  <input type="file" accept="image/*" id="fileUpdate" style="display:none;" />
 
   <div class="container">
-
     <div class="header">
       <div class="header-top">
         <div class="header-icon"><i class="ti ti-chart-line"></i></div>
         <h1>Swing Copilot</h1>
         <span class="header-badge">📈 SWING ONLY</span>
       </div>
-      <p>Upload 4 chart screenshots, hit Analyze — get a clear signal in seconds.</p>
+      <p>Upload 4 chart screenshots, hit Analyze — get a clear signal instantly.</p>
     </div>
 
-    <!-- Screenshot guide -->
     <div class="disclaimer-wrap">
       <div class="disclaimer-toggle" id="disclaimerToggle">
-        <div class="disclaimer-toggle-left">
-          <i class="ti ti-camera" style="font-size:14px;"></i>
-          How to take your screenshots + your responsibility
-        </div>
+        <div class="disclaimer-toggle-left"><i class="ti ti-camera" style="font-size:14px;"></i>How to screenshot your charts + your responsibility</div>
         <span class="disclaimer-arrow" id="disclaimerArrow">▼ Show</span>
       </div>
       <div class="disclaimer-content" id="disclaimerContent">
-        <div class="disclaimer-resp">
-          <strong>Your responsibility:</strong> The quality of the analysis depends entirely on your screenshots. Claude will reject unclear, cropped, or missing charts rather than force a bad signal. Garbage in = garbage out. This is not financial advice — always verify before trading.
-        </div>
-        <div class="tf-row">
-          <div class="tf-pill tf-w">Weekly</div>
-          <div class="tf-text"><strong>2–3 years</strong> visible. Major highs and lows on screen. Price scale on the right mandatory.</div>
-        </div>
-        <div class="tf-row">
-          <div class="tf-pill tf-d">Daily</div>
-          <div class="tf-text"><strong>6–12 months</strong> back. Trend structure and key S/R levels visible.</div>
-        </div>
-        <div class="tf-row">
-          <div class="tf-pill tf-4h">4H</div>
-          <div class="tf-text"><strong>6–10 weeks</strong> back. Entry zone fully visible with room on both sides.</div>
-        </div>
-        <div class="tf-row">
-          <div class="tf-pill tf-1h">1H</div>
-          <div class="tf-text"><strong>Last 3–5 days</strong>, zoomed in. Entry trigger centered on screen.</div>
-        </div>
+        <div class="disclaimer-resp"><strong>Your responsibility:</strong> Analysis quality depends entirely on your screenshots. Claude rejects unclear or cropped charts rather than force a bad signal. This is not financial advice — always verify before trading.</div>
+        <div class="tf-row"><div class="tf-pill tf-w">Weekly</div><div class="tf-text"><strong>2–3 years</strong> visible. Major highs and lows on screen. Price scale on right mandatory.</div></div>
+        <div class="tf-row"><div class="tf-pill tf-d">Daily</div><div class="tf-text"><strong>6–12 months</strong> back. Trend structure and key S/R levels visible.</div></div>
+        <div class="tf-row"><div class="tf-pill tf-4h">4H</div><div class="tf-text"><strong>6–10 weeks</strong> back. Entry zone fully visible with room on both sides.</div></div>
+        <div class="tf-row"><div class="tf-pill tf-1h">1H</div><div class="tf-text"><strong>Last 3–5 days</strong>, zoomed in. Entry trigger centered on screen.</div></div>
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-light);">
-          <div class="rule-row"><div class="rule-dot"></div><div><strong>Price scale visible on the right</strong> — no scale = rejected.</div></div>
+          <div class="rule-row"><div class="rule-dot"></div><div><strong>Price scale visible on right</strong> — no scale = rejected.</div></div>
           <div class="rule-row"><div class="rule-dot"></div><div><strong>No indicators covering candles</strong> — MAs/volume fine, RSI/MACD over price is not.</div></div>
           <div class="rule-row"><div class="rule-dot"></div><div><strong>Same broker across all 4 charts.</strong></div></div>
         </div>
       </div>
     </div>
 
-    <!-- Instrument -->
     <div class="card">
       <div class="card-title">Instrument</div>
       <div class="instrument-grid" id="instrumentGrid"></div>
@@ -225,7 +162,6 @@
       <div class="selected-row" id="selectedRow"></div>
     </div>
 
-    <!-- RR -->
     <div class="card">
       <div class="card-title">Risk : Reward Target</div>
       <div class="rr-top">
@@ -235,14 +171,8 @@
           <div class="rr-badge" id="rrBadge">Selected: 1:3</div>
         </div>
         <div class="rr-stats">
-          <div>
-            <div class="rr-stat-label">Min winrate</div>
-            <div class="rr-stat-val" id="rrWinrate" style="color:#059669;">25%</div>
-          </div>
-          <div>
-            <div class="rr-stat-label">Profit / $100 risk</div>
-            <div class="rr-stat-val" id="rrProfit">$300</div>
-          </div>
+          <div><div class="rr-stat-label">Min winrate</div><div class="rr-stat-val" id="rrWinrate" style="color:#059669;">25%</div></div>
+          <div><div class="rr-stat-label">Profit / $100 risk</div><div class="rr-stat-val" id="rrProfit">$300</div></div>
         </div>
       </div>
       <input type="range" id="rrSlider" min="2" max="10" step="1" value="3" />
@@ -250,7 +180,6 @@
       <div class="rr-warning" id="rrWarning" style="display:none;"></div>
     </div>
 
-    <!-- Context -->
     <div class="card">
       <div class="card-title">Trade Context</div>
       <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;">News environment this week</div>
@@ -263,7 +192,6 @@
       <textarea id="contextNotes" placeholder="Optional: 'FOMC Wednesday', 'NFP Friday', 'near all-time high'..."></textarea>
     </div>
 
-    <!-- Charts -->
     <div class="card">
       <div class="card-title">4 Chart Screenshots — tap each to upload</div>
       <div class="upload-grid" id="uploadGrid"></div>
@@ -289,24 +217,31 @@
       </div>
     </div>
 
-    <!-- Follow-up -->
-    <button class="btn-secondary" id="followupBtn" style="display:none;">
-      <i class="ti ti-message-forward"></i>
-      Price moved — send an update
-    </button>
-
-    <div class="followup-card" id="followupCard">
-      <div class="followup-header">
-        <div class="followup-title">📬 Send an update</div>
-        <div class="followup-sub">Price hit your alert? Paste a fresh 1H screenshot in the message below.</div>
+    <div class="followup-section" id="followupSection">
+      <div class="followup-card">
+        <div class="followup-header">
+          <i class="ti ti-refresh"></i>
+          <div class="followup-title">Price moved? Upload a fresh 1H screenshot for an update</div>
+        </div>
+        <div class="followup-body">
+          <div class="followup-upload-zone" id="followupZone">
+            <i class="ti ti-photo"></i>
+            <div class="followup-upload-label">Tap to upload fresh 1H screenshot</div>
+            <div class="followup-upload-sub">Supports PNG, JPG</div>
+          </div>
+          <button class="btn-update" id="updateBtn" disabled>
+            <i class="ti ti-send"></i>
+            <span id="updateBtnText">Upload a 1H screenshot first</span>
+          </button>
+        </div>
       </div>
-      <div class="followup-body">
-        <div class="followup-label">What happened?</div>
-        <textarea id="followupNote" placeholder="e.g. 'price bounced off 1.08850 and closed green on 1H' or 'dropped through the level, here is the chart'..." rows="2" style="margin-top:0;"></textarea>
-        <div class="followup-hint">💡 Attach your fresh 1H screenshot to the chat message after clicking Send.</div>
-        <button class="btn-followup-send" id="followupSendBtn">
-          <i class="ti ti-send"></i> Send update
-        </button>
+      <div class="loading" id="updateLoadingBox" style="padding:16px;">
+        <div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="loading-text">Checking if the setup has formed...</div>
+      </div>
+      <div class="update-result" id="updateResult">
+        <div class="update-result-header"><i class="ti ti-clock" style="font-size:13px;"></i> Latest Update</div>
+        <div id="updateResultText"></div>
       </div>
     </div>
 
@@ -314,7 +249,6 @@
       For educational purposes only. Not financial advice. All trading involves significant risk of loss.<br />
       Always verify signals independently before placing any trade.
     </div>
-
   </div>
 
   <script>
@@ -328,30 +262,18 @@
       { id: 'GBP/JPY', label: 'GBP/JPY', icon: 'ti-currency-yen' },
       { id: 'WTI Oil', label: 'WTI Oil', icon: 'ti-droplet' },
     ];
-
     const TF_SLOTS = [
       { key: 'W',  fileId: 'fileW',  label: 'Weekly', sub: '2-3 years' },
       { key: 'D',  fileId: 'fileD',  label: 'Daily',  sub: '6-12 months' },
       { key: '4h', fileId: 'file4h', label: '4H',     sub: '6-10 weeks' },
       { key: '1h', fileId: 'file1h', label: '1H',     sub: '3-5 days' },
     ];
-
-    const LOADING_MSGS = [
-      'Reading Weekly structure...',
-      'Checking Daily trend...',
-      'Confirming 4H setup...',
-      'Evaluating 1H entry...',
-      'Grading signal quality...',
-    ];
-
-    let instrument = '';
-    let rr = 3;
+    const LOADING_MSGS = ['Reading Weekly structure...','Checking Daily trend...','Confirming 4H setup...','Evaluating 1H entry...','Grading signal quality...'];
+    let instrument = '', rr = 3, newsCtx = '';
     let uploads = { W: null, D: null, '4h': null, '1h': null };
-    let newsCtx = '';
-    let disclaimerOpen = false;
-    let msgIdx = 0, msgTimer = null;
+    let updateImageData = null, lastAnalysisText = '', disclaimerOpen = false;
+    let msgTimer = null, msgIdx = 0;
 
-    // Instruments
     const grid = document.getElementById('instrumentGrid');
     INSTRUMENTS.forEach(inst => {
       const btn = document.createElement('button');
@@ -369,14 +291,12 @@
     });
 
     document.getElementById('customInstrument').addEventListener('input', function() {
-      const val = this.value.trim().toUpperCase();
       document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
-      instrument = val;
-      document.getElementById('selectedRow').textContent = val ? val + ' (custom)' : '';
+      instrument = this.value.trim().toUpperCase();
+      document.getElementById('selectedRow').textContent = instrument ? instrument + ' (custom)' : '';
       checkReady();
     });
 
-    // RR
     document.getElementById('rrSlider').addEventListener('input', function() { updateRR(+this.value); });
     function updateRR(val) {
       rr = val;
@@ -391,7 +311,6 @@
     }
     updateRR(3);
 
-    // News tags
     document.querySelectorAll('#newsTags .tag').forEach(t => {
       t.addEventListener('click', () => {
         document.querySelectorAll('#newsTags .tag').forEach(x => x.classList.remove('selected'));
@@ -400,7 +319,6 @@
       });
     });
 
-    // Upload zones
     const uploadGrid = document.getElementById('uploadGrid');
     TF_SLOTS.forEach(slot => {
       const zone = document.createElement('div');
@@ -438,8 +356,7 @@
       const btn = document.getElementById('analyzeBtn');
       const txt = document.getElementById('analyzeBtnText');
       if (instrument && allUploaded) {
-        btn.disabled = false;
-        txt.textContent = 'Analyze ' + instrument;
+        btn.disabled = false; txt.textContent = 'Analyze ' + instrument;
       } else if (!instrument) {
         btn.disabled = true; txt.textContent = 'Select an instrument to begin';
       } else {
@@ -449,43 +366,73 @@
       }
     }
 
-    // Disclaimer
     document.getElementById('disclaimerToggle').addEventListener('click', () => {
       disclaimerOpen = !disclaimerOpen;
       document.getElementById('disclaimerContent').className = 'disclaimer-content' + (disclaimerOpen ? ' open' : '');
       document.getElementById('disclaimerArrow').textContent = disclaimerOpen ? '▲ Hide' : '▼ Show';
     });
 
-    // Analyze
-    document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
+    const followupZone = document.getElementById('followupZone');
+    const fileUpdate = document.getElementById('fileUpdate');
+    followupZone.addEventListener('click', () => fileUpdate.click());
+    fileUpdate.addEventListener('change', function() {
+      const file = this.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        updateImageData = ev.target.result;
+        followupZone.className = 'followup-upload-zone loaded';
+        followupZone.innerHTML = `<img style="width:100%;height:70px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${updateImageData}" /><div style="font-size:10px;color:var(--green-text);margin-top:4px;">✓ Screenshot loaded — tap to replace</div>`;
+        document.getElementById('updateBtn').disabled = false;
+        document.getElementById('updateBtnText').textContent = 'Send Update';
+      };
+      reader.readAsDataURL(file);
+      this.value = '';
+    });
 
+    document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
     async function runAnalysis() {
       const notes = document.getElementById('contextNotes').value.trim();
-      setLoading(true);
-      hideError();
+      setLoading(true); hideError();
       document.getElementById('resultCard').className = 'result-card';
-
+      document.getElementById('followupSection').className = 'followup-section';
       try {
         const res = await fetch('/.netlify/functions/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            instrument,
-            rr,
-            news: newsCtx || 'not specified',
-            notes,
-            images: [uploads.W, uploads.D, uploads['4h'], uploads['1h']],
-          }),
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'initial', instrument, rr, news: newsCtx || 'not specified', notes, images: [uploads.W, uploads.D, uploads['4h'], uploads['1h']] }),
         });
-
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Analysis failed');
+        lastAnalysisText = data.result;
         showResult(data.result);
+      } catch (err) { showError(err.message); }
+      finally { setLoading(false); }
+    }
+
+    document.getElementById('updateBtn').addEventListener('click', runUpdate);
+    async function runUpdate() {
+      document.getElementById('updateLoadingBox').className = 'loading visible';
+      document.getElementById('updateResult').className = 'update-result';
+      document.getElementById('updateBtn').disabled = true;
+      document.getElementById('updateBtnText').textContent = 'Checking...';
+      try {
+        const res = await fetch('/.netlify/functions/analyze', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'followup', instrument, updateImage: updateImageData, previousAnalysis: lastAnalysisText }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Update failed');
+        document.getElementById('updateResultText').textContent = data.result;
+        document.getElementById('updateResult').className = 'update-result visible';
+        document.getElementById('updateResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        updateImageData = null;
+        followupZone.className = 'followup-upload-zone';
+        followupZone.innerHTML = `<i class="ti ti-photo"></i><div class="followup-upload-label">Tap to upload another 1H screenshot</div><div class="followup-upload-sub">Keep monitoring the setup</div>`;
+        document.getElementById('updateBtn').disabled = true;
+        document.getElementById('updateBtnText').textContent = 'Upload a 1H screenshot first';
       } catch (err) {
-        showError(err.message);
-      } finally {
-        setLoading(false);
-      }
+        document.getElementById('updateResultText').textContent = '⚠ ' + err.message;
+        document.getElementById('updateResult').className = 'update-result visible';
+      } finally { document.getElementById('updateLoadingBox').className = 'loading'; }
     }
 
     function setLoading(on) {
@@ -495,71 +442,38 @@
       if (on) {
         msgIdx = 0;
         document.getElementById('loadingText').textContent = LOADING_MSGS[0];
-        msgTimer = setInterval(() => {
-          msgIdx = (msgIdx + 1) % LOADING_MSGS.length;
-          document.getElementById('loadingText').textContent = LOADING_MSGS[msgIdx];
-        }, 2000);
-      } else {
-        clearInterval(msgTimer);
-      }
+        msgTimer = setInterval(() => { msgIdx = (msgIdx + 1) % LOADING_MSGS.length; document.getElementById('loadingText').textContent = LOADING_MSGS[msgIdx]; }, 2000);
+      } else { clearInterval(msgTimer); }
     }
 
     function showResult(text) {
       const upper = text.toUpperCase();
       let grade = 'C', signal = 'NO TRADE';
       const gm = upper.match(/GRADE[:\s]+([A-Z]+)/);
-      if (gm) {
-        if (gm[1].startsWith('A')) grade = 'A';
-        else if (gm[1].startsWith('B')) grade = 'B';
-        else if (gm[1].includes('REJECT')) grade = 'REJECT';
-        else grade = 'C';
-      }
-      if (upper.includes('SIGNAL: LONG') || upper.match(/\bLONG\b/)) signal = 'LONG';
-      else if (upper.includes('SIGNAL: SHORT') || upper.match(/\bSHORT\b/)) signal = 'SHORT';
+      if (gm) { if (gm[1].startsWith('A')) grade = 'A'; else if (gm[1].startsWith('B')) grade = 'B'; else if (gm[1].includes('REJECT')) grade = 'REJECT'; else grade = 'C'; }
+      if (upper.match(/SIGNAL[:\s]+LONG/)) signal = 'LONG';
+      else if (upper.match(/SIGNAL[:\s]+SHORT/)) signal = 'SHORT';
       if (upper.includes('REJECT')) { grade = 'REJECT'; signal = 'NO TRADE'; }
-
       const sigCls = signal === 'LONG' ? 'sig-long' : signal === 'SHORT' ? 'sig-short' : 'sig-none';
-      document.getElementById('resultHeader').innerHTML = `
-        <span class="grade-badge grade-${grade}">Grade ${grade}</span>
-        <span class="signal-pill ${sigCls}">${signal}</span>
-        <span style="font-size:12px;color:var(--text-tertiary);margin-left:4px;">${instrument} · 1:${rr} RR</span>`;
+      document.getElementById('resultHeader').innerHTML = `<span class="grade-badge grade-${grade}">Grade ${grade}</span><span class="signal-pill ${sigCls}">${signal}</span><span style="font-size:12px;color:var(--text-tertiary);margin-left:4px;">${instrument} · 1:${rr} RR</span>`;
       document.getElementById('resultBody').textContent = text;
       document.getElementById('resultCard').className = 'result-card visible';
-      document.getElementById('followupBtn').style.display = 'flex';
+      document.getElementById('followupSection').className = 'followup-section visible';
       document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function showError(msg) {
-      const b = document.getElementById('errorBox');
-      b.textContent = '⚠ ' + msg;
-      b.className = 'error-box visible';
-    }
+    function showError(msg) { const b = document.getElementById('errorBox'); b.textContent = '⚠ ' + msg; b.className = 'error-box visible'; }
     function hideError() { document.getElementById('errorBox').className = 'error-box'; }
 
     document.getElementById('newAnalysisBtn').addEventListener('click', () => {
       uploads = { W: null, D: null, '4h': null, '1h': null };
       TF_SLOTS.forEach(s => renderZone(s, null));
       document.getElementById('resultCard').className = 'result-card';
-      document.getElementById('followupBtn').style.display = 'none';
-      document.getElementById('followupCard').className = 'followup-card';
+      document.getElementById('followupSection').className = 'followup-section';
+      document.getElementById('updateResult').className = 'update-result';
+      updateImageData = null; lastAnalysisText = '';
       checkReady();
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    // Follow-up
-    document.getElementById('followupBtn').addEventListener('click', () => {
-      document.getElementById('followupCard').className = 'followup-card visible';
-      document.getElementById('followupBtn').style.display = 'none';
-      document.getElementById('followupCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-
-    document.getElementById('followupSendBtn').addEventListener('click', () => {
-      const note = document.getElementById('followupNote').value.trim();
-      if (!note) { document.getElementById('followupNote').focus(); return; }
-      alert('Copy this message and paste it in the chat with your fresh 1H screenshot:\n\n[UPDATE — ' + instrument + ']\n' + note + '\n\nHas the setup formed? Give me entry, stop, and TPs if yes. If not, what do I still need to see?');
-      document.getElementById('followupNote').value = '';
-      document.getElementById('followupCard').className = 'followup-card';
-      document.getElementById('followupBtn').style.display = 'flex';
     });
   </script>
 </body>
