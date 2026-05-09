@@ -87,7 +87,7 @@ Run the full 4-timeframe swing analysis now.`,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5-20251001",
+        model: "claude-sonnet-4-5-20250929",
         max_tokens: 1500,
         system: systemPrompt,
         messages: [{ role: "user", content }],
