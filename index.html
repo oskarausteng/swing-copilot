@@ -271,7 +271,11 @@
     const LOADING_MSGS = ['Reading Weekly structure...','Checking Daily trend...','Confirming 4H setup...','Evaluating 1H entry...','Grading signal quality...'];
     let instrument = '', rr = 3, newsCtx = '';
     let uploads = { W: null, D: null, '4h': null, '1h': null };
-    let updateImageData = null, lastAnalysisText = '', disclaimerOpen = false;
+    let updateImageData = null;
+    let lastAnalysisText = '';
+    let lastAlertLevel = '';
+    let lastLookFor = '';
+    let disclaimerOpen = false;
     let msgTimer = null, msgIdx = 0;
 
     const grid = document.getElementById('instrumentGrid');
@@ -417,10 +421,12 @@
       try {
         const res = await fetch('/.netlify/functions/analyze', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'followup', instrument, updateImage: updateImageData, previousAnalysis: lastAnalysisText }),
+          body: JSON.stringify({ type: 'followup', instrument, updateImage: updateImageData, previousAnalysis: lastAnalysisText, alertLevel: lastAlertLevel, lookFor: lastLookFor }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Update failed');
+        const newAlert = extractAlertLevel(data.result);
+        if (newAlert.level) { lastAlertLevel = newAlert.level; lastLookFor = newAlert.lookFor; }
         document.getElementById('updateResultText').textContent = data.result;
         document.getElementById('updateResult').className = 'update-result visible';
         document.getElementById('updateResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -435,6 +441,15 @@
       } finally { document.getElementById('updateLoadingBox').className = 'loading'; }
     }
 
+    function extractAlertLevel(text) {
+      const alertMatch = text.match(/alert at[:\s]+([0-9]+\.[0-9]+)/i) ||
+                         text.match(/alert[:\s]+([0-9]+\.[0-9]+)/i) ||
+                         text.match(/watch[:\s]+([0-9]+\.[0-9]+)/i);
+      const lookMatch  = text.match(/look for[:\s]+([^\n.]+)/i) ||
+                         text.match(/wait for[:\s]+([^\n.]+)/i);
+      return { level: alertMatch ? alertMatch[1] : '', lookFor: lookMatch ? lookMatch[1].trim() : '' };
+    }
+
     function setLoading(on) {
       document.getElementById('loadingBox').className = on ? 'loading visible' : 'loading';
       document.getElementById('analyzeBtn').disabled = on;
@@ -447,6 +462,9 @@
     }
 
     function showResult(text) {
+      const extracted = extractAlertLevel(text);
+      lastAlertLevel = extracted.level;
+      lastLookFor = extracted.lookFor;
       const upper = text.toUpperCase();
       let grade = 'C', signal = 'NO TRADE';
       const gm = upper.match(/GRADE[:\s]+([A-Z]+)/);
@@ -471,7 +489,10 @@
       document.getElementById('resultCard').className = 'result-card';
       document.getElementById('followupSection').className = 'followup-section';
       document.getElementById('updateResult').className = 'update-result';
-      updateImageData = null; lastAnalysisText = '';
+      updateImageData = null;
+      lastAnalysisText = '';
+      lastAlertLevel = '';
+      lastLookFor = '';
       checkReady();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
