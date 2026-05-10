@@ -59,8 +59,14 @@ If LONG or SHORT:
 
 If NO TRADE:
 - 2-3 sentences why, in plain english
+
+⬇ Pullback watch (if price dips first):
 - Set alert at: [price]
-- Look for: [exactly what to see on the 1H]
+- Look for: [exactly what to see — e.g. "green 1H candle closing above X"]
+
+⬆ Breakout watch (if price takes off instead):
+- Watch level: [price — the key resistance or structure high that if broken changes things]
+- If that breaks: [one sentence — e.g. "pullback long setup is off, look for a retest of X as new support for a continuation entry" or "stand aside until price consolidates for 4-6 hours, then reassess with fresh 4H"]
 
 Confidence: X% (Structure X/10 | Timing X/10 | News X/10 | TF alignment X/10)
 ---
@@ -68,9 +74,10 @@ Confidence: X% (Structure X/10 | Timing X/10 | News X/10 | TF alignment X/10)
 SECTION 2: SESSION_CONTEXT (used internally, not shown to user — put this at the very end after "---SESSION_CONTEXT---")
 Write a compact structured summary for use in follow-up updates. Include:
 - Weekly bias and key levels
-- Daily structure and key levels  
+- Daily structure and key levels
 - 4H setup and entry zone
-- Alert level and confirmation condition
+- Pullback alert level and confirmation condition
+- Breakout watch level and what it means if hit
 - Signal issued (or reason for no trade)
 Format it as plain key:value lines, concise.`;
 
@@ -106,7 +113,6 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
       const data = await response.json();
       const fullText = data.content.map((b) => b.text || "").join("");
 
-      // Split analysis from session context
       const parts = fullText.split("---SESSION_CONTEXT---");
       const analysisText = parts[0].trim();
       const sessionContextExtracted = parts[1] ? parts[1].trim() : "";
@@ -139,18 +145,22 @@ CRITICAL PRICE READING RULES:
 
 Your job: look at the fresh 1H screenshot and give a short update.
 
-You have THREE possible responses:
+You have FOUR possible responses:
 
 1. YES — ENTER NOW
    Give entry, stop loss, TP1/TP2/TP3. One line on what to watch.
 
 2. NOT YET — STILL WAITING
-   State current price (from right scale). Say what still needs to happen. Give updated alert level.
+   State current price (from right scale). Say what still needs to happen. Restate the relevant alert level.
 
-3. SETUP OFF — INVALIDATED
-   Say why in one sentence. Tell them what to look for next IF anything.
+3. PRICE TOOK OFF — BREAKOUT SCENARIO
+   Use this if price has blown through the original pullback zone and is now near or above the breakout watch level.
+   Say what happened in one sentence. Give concrete guidance: is there a continuation entry forming (retest of breakout level), or should they stand aside?
 
-4. NEED FRESH CHARTS
+4. SETUP OFF — INVALIDATED
+   Say why in one sentence. Tell them what to look for next if anything.
+
+5. NEED FRESH CHARTS
    Use this if: price has moved so far from the original zone that the 4H/Daily context is stale, OR if more than a few days have passed and structure may have changed.
    Say: "NEED FRESH CHARTS — [one sentence why]. Please upload a new Daily and 4H screenshot."
 
@@ -158,37 +168,24 @@ Keep it 4-8 lines max. Plain english. No fluff.
 
 After your response, append ---SESSION_CONTEXT--- followed by an updated compact summary reflecting the latest situation.`;
 
-    // Build conversation for context
     const messages = [];
 
-    // Add session context as first message if available
     if (sessionContext) {
-      messages.push({
-        role: "user",
-        content: `Here is the higher timeframe context from the original analysis:\n\n${sessionContext}`,
-      });
-      messages.push({
-        role: "assistant",
-        content: "Understood. I have the higher timeframe context. Ready for follow-up updates.",
-      });
+      messages.push({ role: "user", content: `Here is the higher timeframe context from the original analysis:\n\n${sessionContext}` });
+      messages.push({ role: "assistant", content: "Understood. I have the higher timeframe context. Ready for follow-up updates." });
     }
 
-    // Add conversation history
     if (conversationHistory && conversationHistory.length > 0) {
       conversationHistory.forEach((msg) => {
         messages.push({ role: msg.role, content: msg.content });
       });
     }
 
-    // Add the new update
     messages.push({
       role: "user",
       content: [
         { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
-        {
-          type: "text",
-          text: `Fresh 1H screenshot for ${instrument}. Read current price from the GREEN label on the RIGHT-HAND scale — not the header bar. Has the setup formed? Give me a short update.`,
-        },
+        { type: "text", text: `Fresh 1H screenshot for ${instrument}. Read current price from the GREEN label on the RIGHT-HAND scale — not the header bar. Has the setup formed? Give me a short update.` },
       ],
     });
 
@@ -210,8 +207,6 @@ After your response, append ---SESSION_CONTEXT--- followed by an updated compact
       const parts = fullText.split("---SESSION_CONTEXT---");
       const updateText = parts[0].trim();
       const updatedContext = parts[1] ? parts[1].trim() : sessionContext;
-
-      // Detect if AI is requesting fresh charts
       const needsFreshCharts = updateText.toUpperCase().includes("NEED FRESH CHARTS");
 
       return {
