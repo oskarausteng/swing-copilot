@@ -15,8 +15,9 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid request body" }) };
   }
 
-  const { type, instrument, rr, news, notes, images, updateImage, sessionContext, conversationHistory } = body;
+  const { type, instrument, rr, news, notes, images, updateImage, updateImage2, sessionContext, conversationHistory } = body;
 
+  // ─── INITIAL ANALYSIS ────────────────────────────────────────────────────────
   if (type === "initial") {
     if (!instrument || !images || images.length !== 4) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing instrument or 4 chart images" }) };
@@ -46,6 +47,7 @@ Use this exact structure. Write in plain english. No jargon. A beginner must be 
 
 If LONG or SHORT:
 
+[SIGNAL EMOJI AND GRADE]
 [LONG 📈 or SHORT 📉] — Grade [A/B/C] — [X]% confidence
 [One sentence explaining the setup like you're talking to a friend. No jargon.]
 
@@ -131,6 +133,7 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
       const data = await response.json();
       const fullText = data.content.map((b) => b.text || "").join("");
 
+      // Split analysis from session context
       const parts = fullText.split("---SESSION_CONTEXT---");
       const analysisText = parts[0].trim();
       const sessionContextExtracted = parts[1] ? parts[1].trim() : "";
@@ -145,6 +148,7 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
     }
   }
 
+  // ─── FOLLOW-UP UPDATE ────────────────────────────────────────────────────────
   if (type === "followup") {
     if (!updateImage) {
       return { statusCode: 400, body: JSON.stringify({ error: "No screenshot provided" }) };
@@ -210,26 +214,42 @@ Keep the whole response under 15 lines. No fluff. No jargon.
 
 After your response, append ---SESSION_CONTEXT--- followed by an updated compact summary reflecting the latest situation.`;
 
+    // Build conversation for context
     const messages = [];
 
+    // Add session context as first message if available
     if (sessionContext) {
-      messages.push({ role: "user", content: `Here is the higher timeframe context from the original analysis:\n\n${sessionContext}` });
-      messages.push({ role: "assistant", content: "Understood. I have the higher timeframe context. Ready for follow-up updates." });
+      messages.push({
+        role: "user",
+        content: `Here is the higher timeframe context from the original analysis:\n\n${sessionContext}`,
+      });
+      messages.push({
+        role: "assistant",
+        content: "Understood. I have the higher timeframe context. Ready for follow-up updates.",
+      });
     }
 
+    // Add conversation history
     if (conversationHistory && conversationHistory.length > 0) {
       conversationHistory.forEach((msg) => {
         messages.push({ role: msg.role, content: msg.content });
       });
     }
 
-    messages.push({
-      role: "user",
-      content: [
-        { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
-        { type: "text", text: `Fresh 1H screenshot for ${instrument}. Read current price from the GREEN label on the RIGHT-HAND scale — not the header bar. Has the setup formed? Give me a short update.` },
-      ],
-    });
+    // Add the new update
+    // Build the update message — supports 1 or 2 images
+    const updateContent = [];
+    updateContent.push({ type: "image", source: { type: "base64", media_type: mediaType, data: base64 } });
+    if (updateImage2) {
+      const base642 = updateImage2.split(",")[1];
+      const mediaType2 = updateImage2.match(/data:([^;]+);/)[1];
+      updateContent.push({ type: "image", source: { type: "base64", media_type: mediaType2, data: base642 } });
+      updateContent.push({ type: "text", text: `Fresh screenshots for ${instrument}. First image is the 4H chart, second image is the 1H chart. Read current price from the GREEN label on the RIGHT-HAND scale of the 1H chart — not the header bar. Has the setup formed? Give me a short update.` });
+    } else {
+      updateContent.push({ type: "text", text: `Fresh 1H screenshot for ${instrument}. Read current price from the GREEN label on the RIGHT-HAND scale — not the header bar. Has the setup formed? Give me a short update.` });
+    }
+
+    messages.push({ role: "user", content: updateContent });
 
     try {
       const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -249,6 +269,8 @@ After your response, append ---SESSION_CONTEXT--- followed by an updated compact
       const parts = fullText.split("---SESSION_CONTEXT---");
       const updateText = parts[0].trim();
       const updatedContext = parts[1] ? parts[1].trim() : sessionContext;
+
+      // Detect if AI is requesting fresh charts
       const needsFreshCharts = updateText.toUpperCase().includes("NEED FRESH CHARTS");
 
       return {
