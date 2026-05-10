@@ -17,7 +17,6 @@ exports.handler = async function (event) {
 
   const { type, instrument, rr, news, notes, images, updateImage, sessionContext, conversationHistory } = body;
 
-  // ─── INITIAL ANALYSIS ────────────────────────────────────────────────────────
   if (type === "initial") {
     if (!instrument || !images || images.length !== 4) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing instrument or 4 chart images" }) };
@@ -43,32 +42,51 @@ RESPONSE FORMAT — two sections:
 
 SECTION 1: ANALYSIS (shown to user)
 ---
-SIGNAL QUALITY GRADE: A / B / C / REJECT
-Signal: LONG / SHORT / NO TRADE
+Use this exact structure. Write in plain english. No jargon. A beginner must be able to read this and know exactly what to do.
 
 If LONG or SHORT:
-- One sentence explaining the setup in plain english
-- Entry: [price] (only after: [specific 1H confirmation])
-- Stop Loss: [price] (below liquidity, not the obvious swing low)
-- TP1: [price] — take off half (RR X:X)
-- TP2: [price] — take off a quarter (RR X:X)
-- TP3: [price] — let the rest run (RR X:X)
-- Move stop to entry once TP1 hits
-- Suggested hold: X-X days
-- Risk: [one line]
+
+[LONG 📈 or SHORT 📉] — Grade [A/B/C] — [X]% confidence
+[One sentence explaining the setup like you're talking to a friend. No jargon.]
+
+━━━ YOUR LEVELS ━━━
+Enter:      [price]
+Stop Loss:  [price]  ← exit if price closes below this
+TP1:        [price]  ← take off HALF your position here (RR X:X)
+TP2:        [price]  ← take off a QUARTER here (RR X:X)
+TP3:        [price]  ← let the last bit run to here (RR X:X)
+
+━━━ BEFORE YOU ENTER ━━━
+[Exact confirmation needed — e.g. "Wait for a green 1H candle to close above 1.08900 before placing the order."]
+[If not triggered within X days: cancel and move on.]
+
+━━━ WHILE IN THE TRADE ━━━
+Once TP1 hits → move your stop to your entry price. You cannot lose money on the trade after that.
+[Any other specific management note if relevant.]
+
+⚠️  [One risk warning in plain english — e.g. news event, spread warning, volatile conditions.]
+
+---
 
 If NO TRADE:
-- 2-3 sentences why, in plain english
 
-⬇ Pullback watch (if price dips first):
-- Set alert at: [price]
-- Look for: [exactly what to see — e.g. "green 1H candle closing above X"]
+⏸ NO TRADE — [one sentence why in plain english. No jargon.]
 
-⬆ Breakout watch (if price takes off instead):
-- Watch level: [price — the key resistance or structure high that if broken changes things]
-- If that breaks: [one sentence — e.g. "pullback long setup is off, look for a retest of X as new support for a continuation entry" or "stand aside until price consolidates for 4-6 hours, then reassess with fresh 4H"]
+[One more sentence if needed to explain. Keep it simple.]
 
-Confidence: X% (Structure X/10 | Timing X/10 | News X/10 | TF alignment X/10)
+━━━ WHAT TO WATCH ━━━
+
+⬇ If price pulls back first:
+   Set alert at: [price]
+   When it hits: send a fresh 1H screenshot here
+   Enter when: [exact condition — e.g. "green 1H candle closes above X"]
+
+⬆ If price takes off without you:
+   Set alert at: [price]
+   When it hits: send a fresh 4H + 1H screenshot here
+   Don't chase before the alert — wait for it to come to you.
+
+Confidence: [X]% (Structure [X]/10 | Timing [X]/10 | News risk [X]/10 | TF alignment [X]/10)
 ---
 
 SECTION 2: SESSION_CONTEXT (used internally, not shown to user — put this at the very end after "---SESSION_CONTEXT---")
@@ -127,7 +145,6 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
     }
   }
 
-  // ─── FOLLOW-UP UPDATE ────────────────────────────────────────────────────────
   if (type === "followup") {
     if (!updateImage) {
       return { statusCode: 400, body: JSON.stringify({ error: "No screenshot provided" }) };
@@ -143,28 +160,53 @@ CRITICAL PRICE READING RULES:
 - IGNORE the O/H/L/C header bar at the top — those are old candle values
 - IGNORE dotted line labels — those are reference levels
 
-Your job: look at the fresh 1H screenshot and give a short update.
+Your job: look at the fresh 1H screenshot and give a short update. Write in plain english — a beginner must understand exactly what to do.
 
-You have FOUR possible responses:
+You have FIVE possible responses:
 
 1. YES — ENTER NOW
-   Give entry, stop loss, TP1/TP2/TP3. One line on what to watch.
+✅ ENTER NOW
+[One sentence explaining what you see that confirms the entry.]
+
+━━━ YOUR LEVELS ━━━
+Enter:      [price]
+Stop Loss:  [price]  ← exit if price closes below this
+TP1:        [price]  ← take off HALF here (RR X:X)
+TP2:        [price]  ← take off a QUARTER here (RR X:X)
+TP3:        [price]  ← let the last bit run (RR X:X)
+
+Once TP1 hits → move stop to entry. You cannot lose after that.
+⚠️ [One risk warning if relevant.]
 
 2. NOT YET — STILL WAITING
-   State current price (from right scale). Say what still needs to happen. Restate the relevant alert level.
+⏳ NOT YET — still waiting.
+Current price: [read from RIGHT-HAND scale only]
+[One sentence on what still needs to happen.]
 
-3. PRICE TOOK OFF — BREAKOUT SCENARIO
-   Use this if price has blown through the original pullback zone and is now near or above the breakout watch level.
-   Say what happened in one sentence. Give concrete guidance: is there a continuation entry forming (retest of breakout level), or should they stand aside?
+Still watching:
+⬇ Set alert at: [pullback level] — send 1H screenshot when hit
+⬆ Set alert at: [breakout level] — send 4H + 1H screenshot when hit
+
+3. PRICE TOOK OFF — BREAKOUT
+🚀 PRICE TOOK OFF — [one sentence what happened]
+[Concrete guidance: is there a continuation entry forming, or stand aside?]
+
+If continuing:
+   Set alert at: [retest level]
+   When it hits: send a fresh 4H + 1H screenshot here
+
+If not clear:
+   Stand aside for now. Send a fresh 4H screenshot in [X] hours.
 
 4. SETUP OFF — INVALIDATED
-   Say why in one sentence. Tell them what to look for next if anything.
+❌ SETUP OFF — [one sentence why]
+[What to look for next, if anything. If nothing, say "Nothing to watch right now — move on."]
 
 5. NEED FRESH CHARTS
-   Use this if: price has moved so far from the original zone that the 4H/Daily context is stale, OR if more than a few days have passed and structure may have changed.
-   Say: "NEED FRESH CHARTS — [one sentence why]. Please upload a new Daily and 4H screenshot."
+🔄 NEED FRESH CHARTS — [one sentence why]
+Please upload a new Daily and 4H screenshot so I can reassess.
 
-Keep it 4-8 lines max. Plain english. No fluff.
+Keep the whole response under 15 lines. No fluff. No jargon.
 
 After your response, append ---SESSION_CONTEXT--- followed by an updated compact summary reflecting the latest situation.`;
 
