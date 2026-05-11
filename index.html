@@ -526,7 +526,7 @@
           body: JSON.stringify({ type: 'initial', instrument, rr, news: newsCtx || 'not specified', notes, images: [uploads.W, uploads.D, uploads['4h'], uploads['1h']] }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Analysis failed');
+        if (!res.ok) throw new Error(data.error || data.message || `Server error ${res.status}`);
 
         sessionContext = data.sessionContext || '';
         conversationHistory = [];
