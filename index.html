@@ -170,6 +170,13 @@
       </div>
       <div class="disclaimer-content" id="disclaimerContent">
         <div class="disclaimer-resp"><strong>Your responsibility:</strong> Analysis quality depends entirely on your screenshots. Claude rejects unclear or cropped charts rather than force a bad signal. This is not financial advice — always verify before trading.</div>
+
+        <!-- OHLC warning — most important instruction -->
+        <div style="background:#FEF3C7;border:1.5px solid #F59E0B;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:700;color:#78350F;margin-bottom:4px;">⚠️ Do this before screenshotting — takes 10 seconds</div>
+          <div style="font-size:12px;color:#92400E;line-height:1.6;">In TradingView go to <strong>Chart Settings → Status Line → uncheck "OHLC Values"</strong>. This hides the O/H/L/C bar at the top of the chart. Without this, Claude may read the wrong price and give you bad levels.</div>
+        </div>
+
         <div class="tf-row"><div class="tf-pill tf-w">Weekly</div><div class="tf-text"><strong>2–3 years</strong> visible. Major highs and lows on screen. Price scale on right mandatory.</div></div>
         <div class="tf-row"><div class="tf-pill tf-d">Daily</div><div class="tf-text"><strong>6–12 months</strong> back. Trend structure and key S/R levels visible.</div></div>
         <div class="tf-row"><div class="tf-pill tf-4h">4H</div><div class="tf-text"><strong>6–10 weeks</strong> back. Entry zone fully visible with room on both sides.</div></div>
