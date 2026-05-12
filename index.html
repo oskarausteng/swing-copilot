@@ -150,7 +150,6 @@
   <input type="file" accept="image/*" id="fileD"  style="display:none;" />
   <input type="file" accept="image/*" id="file4h" style="display:none;" />
   <input type="file" accept="image/*" id="file1h" style="display:none;" />
-  <input type="file" accept="image/*" id="fileUpdate" multiple style="display:none;" />
   <input type="file" accept="image/*" id="fileFreshD"  style="display:none;" />
   <input type="file" accept="image/*" id="fileFresh4h" style="display:none;" />
 
@@ -277,24 +276,20 @@
         </div>
       </div>
 
-      <!-- 1H update card -->
+      <!-- 1H update card — zone rebuilt dynamically after each response -->
       <div class="monitor-card">
         <div class="monitor-header">
           <i class="ti ti-refresh"></i>
           <div>
-            <div class="monitor-title" id="monitorTitle">Monitoring — send a 1H update</div>
-            <div class="monitor-sub" id="monitorSub">Upload a fresh 1H screenshot anytime price moves</div>
+            <div class="monitor-title" id="monitorTitle">Monitoring</div>
+            <div class="monitor-sub" id="monitorSub">Send a screenshot update when price moves</div>
           </div>
         </div>
         <div class="monitor-body">
-          <div class="followup-upload-zone" id="followupZone">
-            <i class="ti ti-photo"></i>
-            <div class="followup-upload-label">Tap to upload screenshot(s)</div>
-            <div class="followup-upload-sub">1H only, or 4H + 1H together — select multiple if needed</div>
-          </div>
+          <div id="dynamicUploadZone"></div>
           <button class="btn-update" id="updateBtn" disabled>
             <i class="ti ti-send"></i>
-            <span id="updateBtnText">Upload a 1H screenshot first</span>
+            <span id="updateBtnText">Upload a screenshot first</span>
           </button>
         </div>
       </div>
@@ -445,37 +440,145 @@
       document.getElementById('disclaimerArrow').textContent = disclaimerOpen ? '▲ Hide' : '▼ Show';
     });
 
-    // ── Follow-up upload — supports 1 or 2 images ──
-    const followupZone = document.getElementById('followupZone');
-    const fileUpdate = document.getElementById('fileUpdate');
-    let updateImages = [];
+    // ── Dynamic upload zone ──
+    // Parses the last AI response to figure out what screenshots to ask for
+    // then rebuilds the upload zone to match exactly
 
-    followupZone.addEventListener('click', () => fileUpdate.click());
-    fileUpdate.addEventListener('change', function() {
-      const files = Array.from(this.files);
-      if (!files.length) return;
-      updateImages = [];
-      let loaded = 0;
-      files.forEach((file, i) => {
+    let updateImages = [];
+    let requiredSlots = []; // array of {key, label, sub, fileInputId}
+
+    const SLOT_DEFINITIONS = {
+      'weekly': { key: 'weekly', label: 'Weekly Chart', sub: '2-3 years back', color: '#1E3A8A', bg: '#DBEAFE' },
+      'daily':  { key: 'daily',  label: 'Daily Chart',  sub: '6-12 months back', color: '#064E3B', bg: '#D1FAE5' },
+      '4h':     { key: '4h',     label: '4H Chart',     sub: '6-10 weeks back', color: '#78350F', bg: '#FEF3C7' },
+      '1h':     { key: '1h',     label: '1H Chart',     sub: 'Last 3-5 days', color: '#7F1D1D', bg: '#FEE2E2' },
+    };
+
+    function detectRequiredSlots(responseText) {
+      const t = responseText.toUpperCase();
+      const slots = [];
+      // Order matters — weekly first if mentioned
+      if (t.includes('WEEKLY')) slots.push('weekly');
+      if (t.includes('DAILY')) slots.push('daily');
+      if (t.includes('4H') || t.includes('4-HOUR') || t.includes('FOUR HOUR')) slots.push('4h');
+      // Always include 1H unless it's purely a weekly/daily/4h request with no 1H mention
+      // If none detected default to 1H only
+      if (slots.length === 0 || t.includes('1H') || t.includes('1-HOUR') || t.includes('ONE HOUR')) {
+        if (!slots.includes('1h')) slots.push('1h');
+      }
+      return slots.length > 0 ? slots : ['1h'];
+    }
+
+    function buildUploadZone(slotKeys) {
+      requiredSlots = slotKeys.map(k => SLOT_DEFINITIONS[k]);
+      updateImages = new Array(slotKeys.length).fill(null);
+
+      const container = document.getElementById('dynamicUploadZone');
+      container.innerHTML = '';
+
+      // Remove old dynamic file inputs
+      document.querySelectorAll('.dynamic-file-input').forEach(el => el.remove());
+
+      if (slotKeys.length === 1) {
+        // Single zone — full width
+        const slot = requiredSlots[0];
+        const inp = createFileInput(slot.key, 0);
+        const zone = document.createElement('div');
+        zone.className = 'followup-upload-zone';
+        zone.id = 'dynZone_' + slot.key;
+        zone.setAttribute('role', 'button');
+        zone.setAttribute('tabindex', '0');
+        zone.innerHTML = `
+          <i class="ti ti-photo"></i>
+          <div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:${slot.bg};color:${slot.color};margin-bottom:2px;">${slot.label}</div>
+          <div class="followup-upload-sub">${slot.sub}</div>`;
+        zone.addEventListener('click', () => inp.click());
+        zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
+        container.appendChild(zone);
+      } else {
+        // Multiple zones — side by side grid
+        const grid = document.createElement('div');
+        grid.style.cssText = 'display:grid;grid-template-columns:repeat(' + slotKeys.length + ',1fr);gap:8px;';
+        requiredSlots.forEach((slot, i) => {
+          const inp = createFileInput(slot.key, i);
+          const zone = document.createElement('div');
+          zone.className = 'followup-upload-zone';
+          zone.id = 'dynZone_' + slot.key;
+          zone.setAttribute('role', 'button');
+          zone.setAttribute('tabindex', '0');
+          zone.style.minHeight = '90px';
+          zone.innerHTML = `
+            <i class="ti ti-photo" style="font-size:18px;"></i>
+            <div style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:${slot.bg};color:${slot.color};">${slot.label}</div>
+            <div style="font-size:9px;color:var(--text-tertiary);">${slot.sub}</div>`;
+          zone.addEventListener('click', () => inp.click());
+          zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
+          grid.appendChild(zone);
+        });
+        container.appendChild(grid);
+      }
+
+      // Update monitor header
+      const labels = requiredSlots.map(s => s.label).join(' + ');
+      document.getElementById('monitorTitle').textContent = 'Send update — ' + labels;
+      document.getElementById('monitorSub').textContent = requiredSlots.length > 1
+        ? 'Upload each chart screenshot below'
+        : 'Upload a fresh screenshot when price moves';
+
+      document.getElementById('updateBtn').disabled = true;
+      document.getElementById('updateBtnText').textContent = 'Upload screenshot' + (slotKeys.length > 1 ? 's' : '') + ' first';
+    }
+
+    function createFileInput(key, index) {
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = 'image/*';
+      inp.className = 'dynamic-file-input';
+      inp.style.display = 'none';
+      inp.id = 'dynFile_' + key;
+      document.body.appendChild(inp);
+
+      inp.addEventListener('change', function() {
+        const file = this.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = ev => {
-          updateImages[i] = ev.target.result;
-          loaded++;
-          if (loaded === files.length) {
-            followupZone.className = 'followup-upload-zone loaded';
-            if (files.length === 1) {
-              followupZone.innerHTML = `<img style="width:100%;height:70px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${updateImages[0]}" /><div style="font-size:10px;color:var(--green-text);margin-top:4px;">✓ 1 screenshot loaded — tap to replace</div>`;
-            } else {
-              followupZone.innerHTML = `<div style="display:flex;gap:4px;width:100%;">${updateImages.map(img => `<img style="flex:1;height:60px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${img}" />`).join('')}</div><div style="font-size:10px;color:var(--green-text);margin-top:4px;">✓ ${files.length} screenshots loaded — tap to replace</div>`;
-            }
-            document.getElementById('updateBtn').disabled = false;
-            document.getElementById('updateBtnText').textContent = files.length > 1 ? `Send ${files.length} Screenshots` : 'Send Update';
-          }
+          updateImages[index] = ev.target.result;
+          const zone = document.getElementById('dynZone_' + key);
+          const slot = requiredSlots[index];
+          zone.className = 'followup-upload-zone loaded';
+          zone.innerHTML = `
+            <img style="width:100%;height:60px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${ev.target.result}" />
+            <div style="font-size:10px;color:var(--green-text);margin-top:3px;">✓ ${slot.label}</div>
+            <div style="font-size:9px;color:var(--text-tertiary);">Tap to replace</div>`;
+          checkUpdateReady();
         };
         reader.readAsDataURL(file);
+        this.value = '';
       });
-      this.value = '';
-    });
+
+      return inp;
+    }
+
+    function checkUpdateReady() {
+      const allLoaded = updateImages.every(img => img !== null);
+      const btn = document.getElementById('updateBtn');
+      const txt = document.getElementById('updateBtnText');
+      const loaded = updateImages.filter(Boolean).length;
+      const total = requiredSlots.length;
+      if (allLoaded) {
+        btn.disabled = false;
+        txt.textContent = 'Send ' + requiredSlots.map(s => s.label).join(' + ');
+      } else {
+        btn.disabled = true;
+        txt.textContent = `Upload ${total - loaded} more screenshot${total - loaded > 1 ? 's' : ''} first`;
+      }
+    }
+
+    function resetUploadZone() {
+      // Re-detect from last response or default to 1H
+      updateImages = [];
+      buildUploadZone(['1h']);
+    }
 
     // ── Fresh chart zones ──
     function setupFreshZone(zoneId, inputId, label, callback) {
@@ -571,12 +674,9 @@
           document.getElementById('freshChartsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // Reset upload zone
-        updateImages = [];
-        followupZone.className = 'followup-upload-zone';
-        followupZone.innerHTML = `<i class="ti ti-photo"></i><div class="followup-upload-label">Tap to upload screenshot(s)</div><div class="followup-upload-sub">1H only, or 4H + 1H together — select multiple if needed</div>`;
-        document.getElementById('updateBtn').disabled = true;
-        document.getElementById('updateBtnText').textContent = 'Upload a screenshot first';
+        // Rebuild upload zone to match what AI just asked for
+        const detectedSlots = detectRequiredSlots(data.result);
+        buildUploadZone(detectedSlots);
 
       } catch (err) { showError(err.message); }
       finally { setLoading(false, 'update'); }
@@ -678,6 +778,11 @@
       // Hide setup form, show monitoring
       document.getElementById('setupForm').style.display = 'none';
       document.getElementById('monitorSection').className = 'monitor-section visible';
+
+      // Build upload zone based on initial analysis
+      const detectedSlots = detectRequiredSlots(text);
+      buildUploadZone(detectedSlots);
+
       document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -689,6 +794,7 @@
       TF_SLOTS.forEach(s => renderZone(s, null));
       sessionContext = ''; conversationHistory = [];
       updateImages = []; freshD = null; fresh4h = null;
+      document.querySelectorAll('.dynamic-file-input').forEach(el => el.remove());
       document.getElementById('resultCard').className = 'result-card';
       document.getElementById('monitorSection').className = 'monitor-section';
       document.getElementById('setupForm').style.display = '';
