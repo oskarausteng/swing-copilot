@@ -141,10 +141,13 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
       const data = await response.json();
       const fullText = data.content.map((b) => b.text || "").join("");
 
-      // Split analysis from session context
-      const parts = fullText.split("---SESSION_CONTEXT---");
-      const analysisText = parts[0].trim();
-      const sessionContextExtracted = parts[1] ? parts[1].trim() : "";
+      // Strip SESSION_CONTEXT cleanly
+      const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
+      const analysisText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText)
+        .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
+        .replace(/SESSION_CONTEXT[:\s]*/gi, '')
+        .trim();
+      const sessionContextExtracted = scIndex !== -1 ? fullText.substring(scIndex + 21).trim() : "";
 
       return {
         statusCode: 200,
@@ -277,17 +280,23 @@ After your response, append ---SESSION_CONTEXT--- followed by an updated compact
       const data = await response.json();
       const fullText = data.content.map((b) => b.text || "").join("");
 
-      const parts = fullText.split("---SESSION_CONTEXT---");
-      const updateText = parts[0].trim();
-      const updatedContext = parts[1] ? parts[1].trim() : sessionContext;
+      // Strip SESSION_CONTEXT — remove everything from the marker onwards
+      const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
+      const updateText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText).trim();
+      const updatedContext = scIndex !== -1 ? fullText.substring(scIndex + 21).trim() : sessionContext;
 
-      // Detect if AI is requesting fresh charts
-      const needsFreshCharts = updateText.toUpperCase().includes("NEED FRESH CHARTS");
+      // Also strip any partial SESSION_CONTEXT mention that snuck through
+      const cleanText = updateText
+        .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
+        .replace(/SESSION_CONTEXT[:\s]*/gi, '')
+        .trim();
+
+      const needsFreshCharts = cleanText.toUpperCase().includes("NEED FRESH CHARTS");
 
       return {
         statusCode: 200,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ result: updateText, sessionContext: updatedContext, needsFreshCharts }),
+        body: JSON.stringify({ result: cleanText, sessionContext: updatedContext, needsFreshCharts }),
       };
     } catch (err) {
       return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
