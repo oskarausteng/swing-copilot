@@ -17,7 +17,6 @@ exports.handler = async function (event) {
 
   const { type, instrument, rr, news, notes, images, updateImage, updateImage2, sessionContext, conversationHistory } = body;
 
-  // ─── INITIAL ANALYSIS ────────────────────────────────────────────────────────
   if (type === "initial") {
     if (!instrument || !images || images.length !== 4) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing instrument or 4 chart images" }) };
@@ -28,9 +27,10 @@ exports.handler = async function (event) {
     const systemPrompt = `You are an expert swing trader and technical analyst performing strict 4-timeframe top-down analysis.
 
 CRITICAL PRICE READING RULES:
-- Read ALL prices from the RIGHT-HAND price scale of each chart
-- DO NOT use O/H/L/C values in the top header bar — those are individual candle values, not current price
-- The current price is the highlighted/green label on the right side of the chart
+- Before doing anything else, find the OHLC bar at the top of the chart (it shows O: H: L: C: values). IGNORE ALL OF THESE — they show the last candle your cursor was hovering over, not the current price.
+- The ONLY price you should read is the highlighted label on the RIGHT-HAND price scale — it is usually green or white and sits next to the most recent candle on the right edge.
+- If you catch yourself using a price from the top header bar, stop and correct it.
+- Never use the C (close) value from the header as current price under any circumstances.
 
 ANALYSIS PROTOCOL — assess in this order:
 1. Weekly — establish macro bias (bullish/bearish/ranging) and mark key levels. REJECT only if chart is completely unclear or missing price scale.
@@ -172,7 +172,6 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
       const data = await response.json();
       const fullText = data.content.map((b) => b.text || "").join("");
 
-      // Strip SESSION_CONTEXT cleanly
       const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
       const analysisText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText)
         .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
@@ -190,7 +189,6 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
     }
   }
 
-  // ─── FOLLOW-UP UPDATE ────────────────────────────────────────────────────────
   if (type === "followup") {
     if (!updateImage) {
       return { statusCode: 400, body: JSON.stringify({ error: "No screenshot provided" }) };
@@ -202,11 +200,11 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
     const systemPrompt = `You are an expert swing trader monitoring an active trade setup. You have memory of the higher timeframe analysis and conversation history below.
 
 CRITICAL PRICE READING RULES:
-- Current price = the GREEN or highlighted label on the RIGHT-HAND price scale
-- IGNORE the O/H/L/C header bar at the top — those are old candle values
-- IGNORE dotted line labels — those are reference levels
+- Before doing anything else, find the OHLC bar at the top of the chart (it shows O: H: L: C: values). IGNORE ALL OF THESE — they show the last hovered candle, not current price.
+- The ONLY price you should read is the highlighted label on the RIGHT-HAND price scale — usually green or white, next to the most recent candle on the right edge.
+- Never use the C (close) value from the header as current price under any circumstances.
 
-Your job: look at the fresh 1H screenshot and give a short update. Write in plain english — a beginner must understand exactly what to do.
+Your job: look at the fresh screenshot and give a short update. Write in plain english — a beginner must understand exactly what to do.
 
 You have FIVE possible responses:
 
@@ -259,30 +257,19 @@ Keep the whole response under 15 lines. No fluff. No jargon.
 
 After your response, append ---SESSION_CONTEXT--- followed by an updated compact summary reflecting the latest situation.`;
 
-    // Build conversation for context
     const messages = [];
 
-    // Add session context as first message if available
     if (sessionContext) {
-      messages.push({
-        role: "user",
-        content: `Here is the higher timeframe context from the original analysis:\n\n${sessionContext}`,
-      });
-      messages.push({
-        role: "assistant",
-        content: "Understood. I have the higher timeframe context. Ready for follow-up updates.",
-      });
+      messages.push({ role: "user", content: `Here is the higher timeframe context from the original analysis:\n\n${sessionContext}` });
+      messages.push({ role: "assistant", content: "Understood. I have the higher timeframe context. Ready for follow-up updates." });
     }
 
-    // Add conversation history
     if (conversationHistory && conversationHistory.length > 0) {
       conversationHistory.forEach((msg) => {
         messages.push({ role: msg.role, content: msg.content });
       });
     }
 
-    // Add the new update
-    // Build the update message — supports 1 or 2 images
     const updateContent = [];
     updateContent.push({ type: "image", source: { type: "base64", media_type: mediaType, data: base64 } });
     if (updateImage2) {
@@ -291,7 +278,7 @@ After your response, append ---SESSION_CONTEXT--- followed by an updated compact
       updateContent.push({ type: "image", source: { type: "base64", media_type: mediaType2, data: base642 } });
       updateContent.push({ type: "text", text: `Fresh screenshots for ${instrument}. First image is the 4H chart, second image is the 1H chart. Read current price from the GREEN label on the RIGHT-HAND scale of the 1H chart — not the header bar. Has the setup formed? Give me a short update.` });
     } else {
-      updateContent.push({ type: "text", text: `Fresh 1H screenshot for ${instrument}. Read current price from the GREEN label on the RIGHT-HAND scale — not the header bar. Has the setup formed? Give me a short update.` });
+      updateContent.push({ type: "text", text: `Fresh screenshot for ${instrument}. Read current price from the GREEN label on the RIGHT-HAND scale — not the header bar. Has the setup formed? Give me a short update.` });
     }
 
     messages.push({ role: "user", content: updateContent });
@@ -311,12 +298,10 @@ After your response, append ---SESSION_CONTEXT--- followed by an updated compact
       const data = await response.json();
       const fullText = data.content.map((b) => b.text || "").join("");
 
-      // Strip SESSION_CONTEXT — remove everything from the marker onwards
       const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
       const updateText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText).trim();
       const updatedContext = scIndex !== -1 ? fullText.substring(scIndex + 21).trim() : sessionContext;
 
-      // Also strip any partial SESSION_CONTEXT mention that snuck through
       const cleanText = updateText
         .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
         .replace(/SESSION_CONTEXT[:\s]*/gi, '')
