@@ -52,7 +52,9 @@ Only issue NO TRADE if the bias is genuinely unclear or charts are unreadable.
 ZONE THINKING RULES — price respects areas, not exact numbers:
 - Never give a single exact price as an alert or entry level. Always give a zone: e.g. "1.07450–1.07550" not "1.07500".
 - The zone should be roughly 10-20 pips wide for forex majors, wider for gold/indices.
-- Set the alert at the NEAR edge of the zone — the side price will hit first. e.g. for a pullback long, set alert at the top of the zone, not the middle.
+- DIRECTION MATTERS for which edge to set the alert at:
+  - For a LONG setup waiting for a pullback DOWN: price is above the zone and falling toward it. Set alert at the TOP of the zone — that is the near edge price hits first on the way down.
+  - For a SHORT setup waiting for a pullback UP: price is below the zone and rising toward it. Set alert at the BOTTOM of the zone — that is the near edge price hits first on the way up.
 - A reaction anywhere inside the zone counts. If price enters the zone and shows a rejection candle, stagnation, or change of character on 1H — that is a valid signal regardless of whether it touched the exact midpoint.
 - When describing what to look for: "a 1H rejection candle anywhere between 1.07450 and 1.07550" not "price must hit 1.07500 exactly".
 - For entry: enter when a 1H candle closes back in the direction of the trade from inside the zone — not at a specific pip.
