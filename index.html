@@ -463,35 +463,31 @@
     };
 
     function detectRequiredSlots(responseText) {
-      // Only look at the last section of the response — where the AI says what to send next.
-      // The full analysis text mentions all timeframes, which causes false positives.
-      // We extract just the final "send / upload / screenshot" instruction lines.
+      // Find every line that contains a "send screenshot" instruction
+      // then show boxes for the MAXIMUM set asked for across all scenarios.
+      // e.g. if AI says "send 1H" for one case and "send 4H + 1H" for another,
+      // show 4H + 1H boxes so the user can always send what's needed.
 
       const lines = responseText.split('\n');
+      const sendLines = lines.filter(l => {
+        const lower = l.toLowerCase();
+        return (lower.includes('send') || lower.includes('upload')) &&
+               lower.includes('screenshot');
+      });
 
-      // Find the last line that contains an upload/send instruction
-      let actionableSection = '';
-      let foundActionable = false;
-      for (let i = lines.length - 1; i >= 0; i--) {
-        const l = lines[i].toLowerCase();
-        if (l.includes('send') || l.includes('upload') || l.includes('screenshot') || l.includes('fresh')) {
-          // Take from this line to the end
-          actionableSection = lines.slice(i).join('\n');
-          foundActionable = true;
-          break;
-        }
-      }
+      // If no explicit send instructions found, default to 1H
+      if (sendLines.length === 0) return ['1h'];
 
-      // If nothing actionable found, default to 1H
-      if (!foundActionable) return ['1h'];
-
-      const t = actionableSection.toUpperCase();
+      const allText = sendLines.join('\n').toUpperCase();
       const slots = [];
 
-      if (t.includes('WEEKLY')) slots.push('weekly');
-      if (t.includes('DAILY')) slots.push('daily');
-      if (t.includes('4H') || t.includes('4-HOUR')) slots.push('4h');
-      if (t.includes('1H') || t.includes('1-HOUR')) slots.push('1h');
+      if (allText.includes('WEEKLY')) slots.push('weekly');
+      if (allText.includes('DAILY')) slots.push('daily');
+      if (allText.includes('4H') || allText.includes('4-HOUR')) slots.push('4h');
+      // Include 1H if any send line mentions it, or if it's the only thing asked for
+      if (allText.includes('1H') || allText.includes('1-HOUR') || slots.length === 0) {
+        slots.push('1h');
+      }
 
       return slots.length > 0 ? slots : ['1h'];
     }
