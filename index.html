@@ -511,6 +511,8 @@
         ? Array.from(relevantLines).map(i => lines[i]).join('\n')
         : upper;
 
+      console.log('[DETECT] context:', context);
+
       const slots = [];
       if (context.includes('WEEKLY')) slots.push('weekly');
       if (context.includes('DAILY')) slots.push('daily');
@@ -519,6 +521,7 @@
         if (!slots.includes('1h')) slots.push('1h');
       }
 
+      console.log('[DETECT] slots:', slots);
       return slots.length > 0 ? slots : ['1h'];
     }
 
