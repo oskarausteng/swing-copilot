@@ -482,30 +482,29 @@
     };
 
     function detectRequiredSlots(responseText) {
-      // Strip markdown formatting first so **4H** becomes 4H
-      const stripped = responseText.replace(/\*+/g, '').replace(/_+/g, '');
-      const lines = stripped.split('\n');
-      const relevantLines = new Set();
+      // Only scan the actionable section — everything after "WHAT TO WATCH" or "Still watching"
+      // The full analysis mentions all timeframes, causing false positives
+      let scanSection = responseText;
 
-      lines.forEach((line, i) => {
-        const l = line.toLowerCase();
-        if (l.includes('send') || l.includes('screenshot') || l.includes('when it hits') || l.includes('upload') || l.includes('fresh')) {
-          for (let j = Math.max(0, i - 3); j <= Math.min(lines.length - 1, i + 3); j++) {
-            relevantLines.add(j);
-          }
+      // Try to find the actionable section
+      const markers = ['WHAT TO WATCH', 'Still watching', 'Set alert at', 'When it hits', 'send a fresh'];
+      for (const marker of markers) {
+        const idx = responseText.indexOf(marker);
+        if (idx !== -1) {
+          scanSection = responseText.substring(idx);
+          break;
         }
-      });
+      }
 
-      // If nothing found, scan the whole response for timeframe mentions near any action word
-      const scanText = relevantLines.size > 0
-        ? Array.from(relevantLines).map(i => lines[i]).join('\n').toUpperCase()
-        : stripped.toUpperCase();
+      // Strip markdown
+      const stripped = scanSection.replace(/\*+/g, '').replace(/_+/g, '');
+      const upper = stripped.toUpperCase();
 
       const slots = [];
-      if (scanText.includes('WEEKLY')) slots.push('weekly');
-      if (scanText.includes('DAILY')) slots.push('daily');
-      if (scanText.match(/\b4H\b/) || scanText.includes('4-HOUR') || scanText.includes('4H +') || scanText.includes('+ 4H')) slots.push('4h');
-      if (scanText.match(/\b1H\b/) || scanText.includes('1-HOUR') || slots.length === 0) {
+      if (upper.includes('WEEKLY')) slots.push('weekly');
+      if (upper.includes('DAILY')) slots.push('daily');
+      if (upper.match(/\b4H\b/) || upper.includes('4-HOUR') || upper.includes('4H +') || upper.includes('+ 4H')) slots.push('4h');
+      if (upper.match(/\b1H\b/) || upper.includes('1-HOUR') || slots.length === 0) {
         if (!slots.includes('1h')) slots.push('1h');
       }
 
@@ -832,9 +831,9 @@
       document.getElementById('setupForm').style.display = 'none';
       document.getElementById('monitorSection').className = 'monitor-section visible';
 
-      // After initial analysis, detect what AI is asking for
-      const detectedSlots = detectRequiredSlots(text);
-      buildUploadZone(detectedSlots);
+      // After initial analysis always start with 1H monitoring
+      // (detection runs on followup responses where AI specifically asks for charts)
+      buildUploadZone(['1h']);
 
       document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
