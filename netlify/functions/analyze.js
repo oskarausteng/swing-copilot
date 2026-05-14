@@ -17,6 +17,7 @@ exports.handler = async function (event) {
 
   const { type, instrument, rr, news, notes, images, updateImage, updateImage2, sessionContext, conversationHistory } = body;
 
+  // ─── INITIAL ANALYSIS ────────────────────────────────────────────────────────
   if (type === "initial") {
     if (!instrument || !images || images.length !== 4) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing instrument or 4 chart images" }) };
@@ -32,6 +33,12 @@ CRITICAL PRICE READING RULES:
 - Before writing any price, look at the right-hand scale. Find the highlighted box. Use that number. Nothing else.
 - If the number you are about to write matches any value shown in the top header bar, stop — you are reading the wrong thing.
 
+CHART DATE RULES — never reject based on date:
+- Never comment on, question, or reject charts based on the date shown. The user may be backtesting, replaying, or practicing on historical data — this is completely valid and intentional.
+- Treat whatever charts are provided as the current working context regardless of the date shown.
+- Never mention what year it currently is or suggest the user needs "fresher" charts based on the date.
+- Just analyze what you see.
+
 ANALYSIS PROTOCOL — assess in this order:
 1. Weekly — establish macro bias (bullish/bearish/ranging) and mark key levels. REJECT only if chart is completely unclear or missing price scale.
 2. Daily — is structure aligned with weekly bias? Identify the nearest key level price is approaching or reacting from.
@@ -43,7 +50,7 @@ GRADING RULES — be realistic, not perfectionist:
 - Grade B: Weekly + Daily + 4H agree. 1H trigger not yet formed but zone is clear. Issue LONG or SHORT with confirmation condition.
 - Grade C: Weekly + Daily agree, 4H zone is approximate or slightly off. Worth watching. Issue LONG or SHORT with tight conditions.
 - Grade D: 2 of 4 timeframes agree, setup is developing but not ready. Issue DEVELOPING — give the user what to watch for.
-- REJECT: Weekly and Daily actively contradict each other. Or charts are unreadable.
+- REJECT: Weekly and Daily actively contradict each other (e.g. weekly bearish into major resistance, daily bullish). Or charts are unreadable.
 
 KEY RULE: Do not reject a setup just because the 4H is mid-range — if Weekly and Daily are clearly aligned and price is approaching a key level, that is tradeable. Issue the appropriate grade.
 Only issue NO TRADE if the bias is genuinely unclear or charts are unreadable.
@@ -58,9 +65,9 @@ ALERT PLACEMENT — always set the alert at whichever edge of the zone price rea
 - Always ask yourself: which number will price touch first given the current direction? Set the alert there.
 - Never set the alert at the far edge — price may reverse before reaching it and the user misses the setup entirely.
 
-- A reaction anywhere inside the zone counts. If price enters the zone and shows a rejection candle, stagnation, or change of character on 1H — that is a valid signal.
+- A reaction anywhere inside the zone counts. If price enters the zone and shows a rejection candle, stagnation, or change of character on 1H — that is a valid signal regardless of whether it touched the midpoint.
 - When describing what to look for: "a 1H rejection candle anywhere between 1.07450 and 1.07550" not "price must hit 1.07500 exactly".
-- For entry: enter when a 1H candle closes back in the direction of the trade from inside the zone.
+- For entry: enter when a 1H candle closes back in the direction of the trade from inside the zone — not at a specific pip.
 
 RESPONSE FORMAT — two sections:
 
@@ -71,89 +78,90 @@ Use this exact structure. Write in plain english. No jargon. A beginner must be 
 If LONG or SHORT (Grade A, B, or C):
 
 [LONG 📈 or SHORT 📉] — Grade [A/B/C] — [X]% confidence
-[One sentence explaining the setup like you are talking to a friend. No jargon.]
+[One sentence explaining the setup like you're talking to a friend. No jargon.]
 
 ━━━ YOUR LEVELS ━━━
 Entry:      [price]
-Stop Loss:  [price]  <- exit if price closes below/above this
+Stop Loss:  [price]  ← exit if price closes below/above this
 
-IMPORTANT — calculate RR precisely:
+IMPORTANT — calculate RR precisely using this method every time:
 Stop distance = absolute difference between Entry and Stop Loss
-TP1 RR = TP1 distance from entry divided by Stop distance (round to 1 decimal)
-TP2 RR = TP2 distance from entry divided by Stop distance (round to 1 decimal)
-TP3 RR = TP3 distance from entry divided by Stop distance (round to 1 decimal)
-Never guess — divide the exact pip distances.
+TP1 RR = TP1 distance from entry ÷ Stop distance (round to 1 decimal)
+TP2 RR = TP2 distance from entry ÷ Stop distance (round to 1 decimal)
+TP3 RR = TP3 distance from entry ÷ Stop distance (round to 1 decimal)
+Never guess or estimate — divide the exact pip distances.
 
-TP1:        [price]  <- take off HALF your position here (RR 1:[calculated])
-TP2:        [price]  <- take off a QUARTER here (RR 1:[calculated])
-TP3:        [price]  <- let the last bit run to here (RR 1:[calculated])
+TP1:        [price]  ← take off HALF your position here (RR 1:[calculated])
+TP2:        [price]  ← take off a QUARTER here (RR 1:[calculated])
+TP3:        [price]  ← let the last bit run to here (RR 1:[calculated])
 
 ━━━ BEFORE YOU ENTER ━━━
-Zone:       [price]-[price]  <- price can react anywhere in this range
-Enter when: [e.g. "a 1H candle closes back above the bottom of the zone"]
+Zone:       [price]–[price]  ← price can enter anywhere in this range
+Enter when: [e.g. "a 1H candle closes back above the bottom of the zone" — not an exact pip]
 [If no reaction within X days: cancel and move on.]
 
 ━━━ WHILE IN THE TRADE ━━━
-Once TP1 hits -> move your stop to your entry price. You cannot lose money on the trade after that.
+Once TP1 hits → move your stop to your entry price. You cannot lose money on the trade after that.
 [Any other specific management note if relevant.]
 
-[One risk warning in plain english.]
+⚠️  [One risk warning in plain english — e.g. news event, spread warning, volatile conditions.]
 
 ---
 
 If DEVELOPING (Grade D):
 
-DEVELOPING SETUP — Grade D — [X]% confidence
-[One sentence explaining what is forming and why it is not ready yet.]
+📊 DEVELOPING SETUP — Grade D — [X]% confidence
+[One sentence explaining what's forming and why it's not ready yet.]
 
 ━━━ WHAT'S SETTING UP ━━━
 Bias:       [LONG or SHORT]
-Key level:  [price]-[price] — [one sentence why this level matters]
+Key level:  [price] — [one sentence why this level matters]
 Currently:  [one sentence on where price is right now relative to that level]
 
 ━━━ WHAT NEEDS TO HAPPEN ━━━
-[Step 1 — what you need to see first]
-[Step 2 — confirmation]
+[Step 1 — what you need to see first, e.g. "Price needs to pull back to 1.0880"]
+[Step 2 — confirmation, e.g. "Then wait for a 4H candle to close above 1.0900"]
 
-Set alert at: [near edge of zone — whichever price hits first]
-When it hits: send a fresh 1H screenshot here
+⬇ Set alert at: [price]
+   When it hits: send a fresh 1H screenshot here
 
-If price takes off the other way:
-Set alert at: [price]
-When it hits: send a fresh 4H + 1H screenshot here
+⬆ If price takes off without pulling back:
+   Set alert at: [price]
+   When it hits: send a fresh 4H + 1H screenshot here
 
 ---
 
 If NO TRADE or REJECT:
 
-NO TRADE — [one sentence why in plain english.]
+⏸ NO TRADE — [one sentence why in plain english. No jargon.]
 
-[One more sentence if needed.]
+[One more sentence if needed to explain. Keep it simple.]
 
 ━━━ WHAT TO WATCH ━━━
 
-If price pulls back first:
-   Alert zone: [price]-[price]
-   Set alert at: [near edge — whichever price hits first given current direction]
+⬇ If price pulls back first:
+   Alert zone: [price]–[price]
+   Set alert at: [near edge of zone — price hits this first]
    When it hits: send a fresh 1H screenshot here
    Enter when: [e.g. "1H rejection candle anywhere in the zone"]
 
-If price takes off without you:
+⬆ If price takes off without you:
    Set alert at: [price]
    When it hits: send a fresh 4H + 1H screenshot here
-   Do not chase before the alert.
+   Don't chase before the alert — wait for it to come to you.
 
 Confidence: [X]% (Structure [X]/10 | Timing [X]/10 | News risk [X]/10 | TF alignment [X]/10)
 ---
 
-SECTION 2: SESSION_CONTEXT (not shown to user — append after ---SESSION_CONTEXT---)
-Compact summary:
+SECTION 2: SESSION_CONTEXT (used internally, not shown to user — put this at the very end after "---SESSION_CONTEXT---")
+Write a compact structured summary for use in follow-up updates. Include:
 - Weekly bias and key levels
 - Daily structure and key levels
 - 4H setup and entry zone
 - Pullback alert level and confirmation condition
-- Breakout watch level
-- Signal issued`;
+- Breakout watch level and what it means if hit
+- Signal issued (or reason for no trade)
+Format it as plain key:value lines, concise.`;
 
     const tfLabels = ["Weekly chart", "Daily chart", "4H chart", "1H chart"];
     const content = [];
@@ -187,10 +195,11 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
       const data = await response.json();
       const fullText = data.content.map((b) => b.text || "").join("");
 
+      // Strip SESSION_CONTEXT cleanly
       const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
       const analysisText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText)
-        .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, "")
-        .replace(/SESSION_CONTEXT[:\s]*/gi, "")
+        .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
+        .replace(/SESSION_CONTEXT[:\s]*/gi, '')
         .trim();
       const sessionContextExtracted = scIndex !== -1 ? fullText.substring(scIndex + 21).trim() : "";
 
@@ -204,6 +213,7 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
     }
   }
 
+  // ─── FOLLOW-UP UPDATE ────────────────────────────────────────────────────────
   if (type === "followup") {
     if (!updateImage) {
       return { statusCode: 400, body: JSON.stringify({ error: "No screenshot provided" }) };
@@ -212,83 +222,102 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
     const base64 = updateImage.split(",")[1];
     const mediaType = updateImage.match(/data:([^;]+);/)[1];
 
-    const systemPrompt = `You are an expert swing trader monitoring an active trade setup.
+    const systemPrompt = `You are an expert swing trader monitoring an active trade setup. You have memory of the higher timeframe analysis and conversation history below.
 
 CRITICAL PRICE READING RULES:
-- There is a bar of text at the TOP of the chart showing O, H, L, C values. IGNORE ALL OF THEM.
+- There is a bar of text at the TOP of the chart showing O, H, L, C values. IGNORE ALL OF THEM — they belong to whichever candle the cursor was hovering over, not the current price.
 - The ONLY correct current price is the highlighted label on the RIGHT-HAND price scale — the number in a green or white box on the far right edge next to the most recent candle.
 - If the price you are about to write matches any value in the top header bar, stop — you are reading the wrong thing.
 
-ZONE ALERT PLACEMENT — always set alert at whichever edge price reaches FIRST:
-- Price falling toward zone from above → alert at TOP edge (higher number)
-- Price rising toward zone from below → alert at BOTTOM edge (lower number)
+CHART DATE RULES:
+- Never reject or comment on charts based on the date shown. The user may be backtesting or replaying historical data — this is valid and intentional. Just analyze what you see.
 
-Your job: look at the fresh screenshot and give a short update in plain english.
+Your job: look at the fresh 1H screenshot and give a short update. Write in plain english — a beginner must understand exactly what to do.
 
-FIVE possible responses:
+You have FIVE possible responses:
 
-1. ENTER NOW
-ENTER NOW
-[One sentence confirming the entry.]
+1. YES — ENTER NOW
+✅ ENTER NOW
+[One sentence explaining what you see that confirms the entry.]
 
 ━━━ YOUR LEVELS ━━━
 Entry:      [price]
-Stop Loss:  [price]  <- exit if price closes below/above this
-Calculate RR: Stop distance = |Entry - SL|. Divide each TP distance by stop distance.
-TP1:        [price]  <- take off HALF here (RR 1:[calculated])
-TP2:        [price]  <- take off a QUARTER here (RR 1:[calculated])
-TP3:        [price]  <- let the last bit run (RR 1:[calculated])
-Once TP1 hits -> move stop to entry. You cannot lose after that.
-[One risk warning if relevant.]
+Stop Loss:  [price]  ← exit if price closes below/above this
 
-2. NOT YET
-NOT YET — still waiting.
-Current price: [from RIGHT-HAND scale only]
+Calculate RR: Stop distance = |Entry - SL|. Divide each TP distance by stop distance.
+
+TP1:        [price]  ← take off HALF here (RR 1:[calculated])
+TP2:        [price]  ← take off a QUARTER here (RR 1:[calculated])
+TP3:        [price]  ← let the last bit run (RR 1:[calculated])
+
+Once TP1 hits → move stop to entry. You cannot lose after that.
+⚠️ [One risk warning if relevant.]
+
+2. NOT YET — STILL WAITING
+⏳ NOT YET — still waiting.
+Current price: [read from RIGHT-HAND scale only]
 [One sentence on what still needs to happen.]
 
 Still watching:
-Zone: [price]-[price] — alert at [near edge, price hits first] — send 1H screenshot when hit
-If breakout: alert at [price] — send 4H + 1H screenshot when hit
+⬇ Zone: [price]–[price] — set alert at [near edge], send 1H screenshot when hit
+⬆ Set alert at: [breakout level] — send 4H + 1H screenshot when hit
 
-3. PRICE TOOK OFF
-PRICE TOOK OFF — [one sentence what happened]
-[Guidance: continuation entry forming or stand aside?]
-Set alert at: [retest level] — send fresh 4H + 1H screenshot when hit
+3. PRICE TOOK OFF — BREAKOUT
+🚀 PRICE TOOK OFF — [one sentence what happened]
+[Concrete guidance: is there a continuation entry forming, or stand aside?]
 
-4. SETUP OFF
-SETUP OFF — [one sentence why]
-[What to look for next, or "Nothing to watch right now — move on."]
+If continuing:
+   Set alert at: [retest level]
+   When it hits: send a fresh 4H + 1H screenshot here
+
+If not clear:
+   Stand aside for now. Send a fresh 4H screenshot in [X] hours.
+
+4. SETUP OFF — INVALIDATED
+❌ SETUP OFF — [one sentence why]
+[What to look for next, if anything. If nothing, say "Nothing to watch right now — move on."]
 
 5. NEED FRESH CHARTS
-NEED FRESH CHARTS — [one sentence why]
+🔄 NEED FRESH CHARTS — [one sentence why]
 Please upload a new Daily and 4H screenshot so I can reassess.
 
-Keep whole response under 15 lines. No fluff. No jargon.
+Keep the whole response under 15 lines. No fluff. No jargon.
 
-After response, append ---SESSION_CONTEXT--- followed by updated compact summary.`;
+After your response, append ---SESSION_CONTEXT--- followed by an updated compact summary reflecting the latest situation.`;
 
+    // Build conversation for context
     const messages = [];
 
+    // Add session context as first message if available
     if (sessionContext) {
-      messages.push({ role: "user", content: `Higher timeframe context:\n\n${sessionContext}` });
-      messages.push({ role: "assistant", content: "Understood. Ready for follow-up updates." });
+      messages.push({
+        role: "user",
+        content: `Here is the higher timeframe context from the original analysis:\n\n${sessionContext}`,
+      });
+      messages.push({
+        role: "assistant",
+        content: "Understood. I have the higher timeframe context. Ready for follow-up updates.",
+      });
     }
 
+    // Add conversation history
     if (conversationHistory && conversationHistory.length > 0) {
       conversationHistory.forEach((msg) => {
         messages.push({ role: msg.role, content: msg.content });
       });
     }
 
+    // Add the new update
+    // Build the update message — supports 1 or 2 images
     const updateContent = [];
     updateContent.push({ type: "image", source: { type: "base64", media_type: mediaType, data: base64 } });
     if (updateImage2) {
       const base642 = updateImage2.split(",")[1];
       const mediaType2 = updateImage2.match(/data:([^;]+);/)[1];
       updateContent.push({ type: "image", source: { type: "base64", media_type: mediaType2, data: base642 } });
-      updateContent.push({ type: "text", text: `Fresh screenshots for ${instrument}. First image is 4H, second is 1H. Read current price from the RIGHT-HAND scale of the 1H chart only.` });
+      updateContent.push({ type: "text", text: `Fresh screenshots for ${instrument}. First image is the 4H chart, second image is the 1H chart. Read current price from the GREEN label on the RIGHT-HAND scale of the 1H chart — not the header bar. Has the setup formed? Give me a short update.` });
     } else {
-      updateContent.push({ type: "text", text: `Fresh screenshot for ${instrument}. Read current price from the RIGHT-HAND scale only — not the header bar.` });
+      updateContent.push({ type: "text", text: `Fresh 1H screenshot for ${instrument}. Read current price from the GREEN label on the RIGHT-HAND scale — not the header bar. Has the setup formed? Give me a short update.` });
     }
 
     messages.push({ role: "user", content: updateContent });
@@ -308,13 +337,17 @@ After response, append ---SESSION_CONTEXT--- followed by updated compact summary
       const data = await response.json();
       const fullText = data.content.map((b) => b.text || "").join("");
 
+      // Strip SESSION_CONTEXT — remove everything from the marker onwards
       const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
       const updateText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText).trim();
       const updatedContext = scIndex !== -1 ? fullText.substring(scIndex + 21).trim() : sessionContext;
+
+      // Also strip any partial SESSION_CONTEXT mention that snuck through
       const cleanText = updateText
-        .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, "")
-        .replace(/SESSION_CONTEXT[:\s]*/gi, "")
+        .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
+        .replace(/SESSION_CONTEXT[:\s]*/gi, '')
         .trim();
+
       const needsFreshCharts = cleanText.toUpperCase().includes("NEED FRESH CHARTS");
 
       return {
