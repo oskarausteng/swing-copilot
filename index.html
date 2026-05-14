@@ -482,29 +482,40 @@
     };
 
     function detectRequiredSlots(responseText) {
-      // Only scan the actionable section — everything after "WHAT TO WATCH" or "Still watching"
-      // The full analysis mentions all timeframes, causing false positives
-      let scanSection = responseText;
-
-      // Try to find the actionable section
-      const markers = ['WHAT TO WATCH', 'Still watching', 'Set alert at', 'When it hits', 'send a fresh'];
+      // Find the start of the actionable section
+      const markers = ['━━━ WHAT TO WATCH', 'WHAT TO WATCH', 'Still watching', 'Set alert at', 'When it hits'];
+      let startIdx = -1;
       for (const marker of markers) {
         const idx = responseText.indexOf(marker);
-        if (idx !== -1) {
-          scanSection = responseText.substring(idx);
-          break;
-        }
+        if (idx !== -1) { startIdx = idx; break; }
       }
 
+      // Scan from the actionable section to end (or whole response if no marker found)
+      const scanSection = startIdx !== -1 ? responseText.substring(startIdx) : responseText;
+
       // Strip markdown
-      const stripped = scanSection.replace(/\*+/g, '').replace(/_+/g, '');
-      const upper = stripped.toUpperCase();
+      const upper = scanSection.replace(/\*+/g, '').replace(/_+/g, '').toUpperCase();
+
+      // Only look at lines that are near a "send/screenshot/when it hits" instruction
+      const lines = upper.split('\n');
+      const relevantLines = new Set();
+      lines.forEach((line, i) => {
+        if (line.includes('SEND') || line.includes('SCREENSHOT') || line.includes('WHEN IT HITS')) {
+          for (let j = Math.max(0, i - 1); j <= Math.min(lines.length - 1, i + 1); j++) {
+            relevantLines.add(j);
+          }
+        }
+      });
+
+      const context = relevantLines.size > 0
+        ? Array.from(relevantLines).map(i => lines[i]).join('\n')
+        : upper;
 
       const slots = [];
-      if (upper.includes('WEEKLY')) slots.push('weekly');
-      if (upper.includes('DAILY')) slots.push('daily');
-      if (upper.match(/\b4H\b/) || upper.includes('4-HOUR') || upper.includes('4H +') || upper.includes('+ 4H')) slots.push('4h');
-      if (upper.match(/\b1H\b/) || upper.includes('1-HOUR') || slots.length === 0) {
+      if (context.includes('WEEKLY')) slots.push('weekly');
+      if (context.includes('DAILY')) slots.push('daily');
+      if (context.match(/\b4H\b/) || context.includes('4-HOUR')) slots.push('4h');
+      if (context.match(/\b1H\b/) || context.includes('1-HOUR') || slots.length === 0) {
         if (!slots.includes('1h')) slots.push('1h');
       }
 
