@@ -462,17 +462,36 @@
     };
 
     function detectRequiredSlots(responseText) {
-      const t = responseText.toUpperCase();
+      // Only look at the last section of the response — where the AI says what to send next.
+      // The full analysis text mentions all timeframes, which causes false positives.
+      // We extract just the final "send / upload / screenshot" instruction lines.
+
+      const lines = responseText.split('\n');
+
+      // Find the last line that contains an upload/send instruction
+      let actionableSection = '';
+      let foundActionable = false;
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const l = lines[i].toLowerCase();
+        if (l.includes('send') || l.includes('upload') || l.includes('screenshot') || l.includes('fresh')) {
+          // Take from this line to the end
+          actionableSection = lines.slice(i).join('\n');
+          foundActionable = true;
+          break;
+        }
+      }
+
+      // If nothing actionable found, default to 1H
+      if (!foundActionable) return ['1h'];
+
+      const t = actionableSection.toUpperCase();
       const slots = [];
-      // Order matters — weekly first if mentioned
+
       if (t.includes('WEEKLY')) slots.push('weekly');
       if (t.includes('DAILY')) slots.push('daily');
-      if (t.includes('4H') || t.includes('4-HOUR') || t.includes('FOUR HOUR')) slots.push('4h');
-      // Always include 1H unless it's purely a weekly/daily/4h request with no 1H mention
-      // If none detected default to 1H only
-      if (slots.length === 0 || t.includes('1H') || t.includes('1-HOUR') || t.includes('ONE HOUR')) {
-        if (!slots.includes('1h')) slots.push('1h');
-      }
+      if (t.includes('4H') || t.includes('4-HOUR')) slots.push('4h');
+      if (t.includes('1H') || t.includes('1-HOUR')) slots.push('1h');
+
       return slots.length > 0 ? slots : ['1h'];
     }
 
@@ -786,9 +805,8 @@
       document.getElementById('setupForm').style.display = 'none';
       document.getElementById('monitorSection').className = 'monitor-section visible';
 
-      // Build upload zone based on initial analysis
-      const detectedSlots = detectRequiredSlots(text);
-      buildUploadZone(detectedSlots);
+      // After initial analysis, monitoring always starts with 1H
+      buildUploadZone(['1h']);
 
       document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -807,10 +825,9 @@
       document.getElementById('setupForm').style.display = '';
       document.getElementById('convoHistory').innerHTML = '';
       document.getElementById('freshChartsCard').className = 'fresh-charts-card';
+      document.getElementById('dynamicUploadZone').innerHTML = '';
       document.getElementById('updateBtn').disabled = true;
-      document.getElementById('updateBtnText').textContent = 'Upload a 1H screenshot first';
-      followupZone.className = 'followup-upload-zone';
-      followupZone.innerHTML = `<i class="ti ti-photo"></i><div class="followup-upload-label">Tap to upload fresh 1H screenshot</div><div class="followup-upload-sub">Supports PNG, JPG</div>`;
+      document.getElementById('updateBtnText').textContent = 'Upload a screenshot first';
       hideError();
       checkReady();
       window.scrollTo({ top: 0, behavior: 'smooth' });
