@@ -845,9 +845,9 @@
       document.getElementById('setupForm').style.display = 'none';
       document.getElementById('monitorSection').className = 'monitor-section visible';
 
-      // After initial analysis always start with 1H monitoring
-      // (detection runs on followup responses where AI specifically asks for charts)
-      buildUploadZone(['1h']);
+      // Detect slots from initial analysis response
+      const detectedSlots = detectRequiredSlots(text);
+      buildUploadZone(detectedSlots);
 
       document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
