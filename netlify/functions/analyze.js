@@ -52,10 +52,14 @@ Only issue NO TRADE if the bias is genuinely unclear or charts are unreadable.
 ZONE THINKING RULES — price respects areas, not exact numbers:
 - Never give a single exact price as an alert or entry level. Always give a zone: e.g. "1.07450–1.07550" not "1.07500".
 - The zone should be roughly 10-20 pips wide for forex majors, wider for gold/indices.
-- DIRECTION MATTERS for which edge to set the alert at:
-  - For a LONG setup waiting for a pullback DOWN: price is above the zone and falling toward it. Set alert at the TOP of the zone — that is the near edge price hits first on the way down.
-  - For a SHORT setup waiting for a pullback UP: price is below the zone and rising toward it. Set alert at the BOTTOM of the zone — that is the near edge price hits first on the way up.
-- A reaction anywhere inside the zone counts. If price enters the zone and shows a rejection candle, stagnation, or change of character on 1H — that is a valid signal regardless of whether it touched the exact midpoint.
+
+ALERT PLACEMENT — always set the alert at whichever edge of the zone price reaches FIRST:
+- Price is ABOVE the zone and moving DOWN toward it → set alert at the TOP edge (higher number). Example: zone is 1.0630–1.0650, price falling from above → alert at 1.0650.
+- Price is BELOW the zone and moving UP toward it → set alert at the BOTTOM edge (lower number). Example: zone is 1.0730–1.0750, price rising from below → alert at 1.0730.
+- Always ask yourself: which number will price touch first given the current direction? Set the alert there.
+- Never set the alert at the far edge — price may reverse before reaching it and the user misses the setup entirely.
+
+- A reaction anywhere inside the zone counts. If price enters the zone and shows a rejection candle, stagnation, or change of character on 1H — that is a valid signal regardless of whether it touched the midpoint.
 - When describing what to look for: "a 1H rejection candle anywhere between 1.07450 and 1.07550" not "price must hit 1.07500 exactly".
 - For entry: enter when a 1H candle closes back in the direction of the trade from inside the zone — not at a specific pip.
 
