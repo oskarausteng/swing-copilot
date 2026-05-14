@@ -161,7 +161,7 @@
         <h1>Swing Copilot</h1>
         <span class="header-badge">📈 SWING ONLY</span>
       </div>
-      <p>Upload 4 charts to start. After that, just keep sending 1H updates — Claude remembers the setup. <span style="font-size:10px;color:#ccc;">v14</span></p>
+      <p>Upload 4 charts to start. After that, just keep sending 1H updates — Claude remembers the setup.</p>
     </div>
 
     <!-- Always-visible OHLC warning -->
@@ -511,8 +511,6 @@
         ? Array.from(relevantLines).map(i => lines[i]).join('\n')
         : upper;
 
-      console.log('[DETECT] context:', context);
-
       const slots = [];
       if (context.includes('WEEKLY')) slots.push('weekly');
       if (context.includes('DAILY')) slots.push('daily');
@@ -521,7 +519,6 @@
         if (!slots.includes('1h')) slots.push('1h');
       }
 
-      console.log('[DETECT] slots:', slots);
       return slots.length > 0 ? slots : ['1h'];
     }
 
