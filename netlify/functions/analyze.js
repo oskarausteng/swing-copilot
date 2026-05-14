@@ -17,6 +17,7 @@ exports.handler = async function (event) {
 
   const { type, instrument, rr, news, notes, images, updateImage, updateImage2, sessionContext, conversationHistory } = body;
 
+  // ─── INITIAL ANALYSIS ────────────────────────────────────────────────────────
   if (type === "initial") {
     if (!instrument || !images || images.length !== 4) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing instrument or 4 chart images" }) };
@@ -48,6 +49,14 @@ GRADING RULES — be realistic, not perfectionist:
 KEY RULE: Do not reject a setup just because the 4H is mid-range — if Weekly and Daily are clearly aligned and price is approaching a key level, that is tradeable. Issue the appropriate grade.
 Only issue NO TRADE if the bias is genuinely unclear or charts are unreadable.
 
+ZONE THINKING RULES — price respects areas, not exact numbers:
+- Never give a single exact price as an alert or entry level. Always give a zone: e.g. "1.07450–1.07550" not "1.07500".
+- The zone should be roughly 10-20 pips wide for forex majors, wider for gold/indices.
+- Set the alert at the NEAR edge of the zone — the side price will hit first. e.g. for a pullback long, set alert at the top of the zone, not the middle.
+- A reaction anywhere inside the zone counts. If price enters the zone and shows a rejection candle, stagnation, or change of character on 1H — that is a valid signal regardless of whether it touched the exact midpoint.
+- When describing what to look for: "a 1H rejection candle anywhere between 1.07450 and 1.07550" not "price must hit 1.07500 exactly".
+- For entry: enter when a 1H candle closes back in the direction of the trade from inside the zone — not at a specific pip.
+
 RESPONSE FORMAT — two sections:
 
 SECTION 1: ANALYSIS (shown to user)
@@ -75,8 +84,9 @@ TP2:        [price]  ← take off a QUARTER here (RR 1:[calculated])
 TP3:        [price]  ← let the last bit run to here (RR 1:[calculated])
 
 ━━━ BEFORE YOU ENTER ━━━
-[Exact confirmation needed — e.g. "Wait for a green 1H candle to close above 1.08900 before placing the order."]
-[If not triggered within X days: cancel and move on.]
+Zone:       [price]–[price]  ← price can enter anywhere in this range
+Enter when: [e.g. "a 1H candle closes back above the bottom of the zone" — not an exact pip]
+[If no reaction within X days: cancel and move on.]
 
 ━━━ WHILE IN THE TRADE ━━━
 Once TP1 hits → move your stop to your entry price. You cannot lose money on the trade after that.
@@ -118,9 +128,10 @@ If NO TRADE or REJECT:
 ━━━ WHAT TO WATCH ━━━
 
 ⬇ If price pulls back first:
-   Set alert at: [price]
+   Alert zone: [price]–[price]
+   Set alert at: [near edge of zone — price hits this first]
    When it hits: send a fresh 1H screenshot here
-   Enter when: [exact condition — e.g. "green 1H candle closes above X"]
+   Enter when: [e.g. "1H rejection candle anywhere in the zone"]
 
 ⬆ If price takes off without you:
    Set alert at: [price]
@@ -172,6 +183,7 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
       const data = await response.json();
       const fullText = data.content.map((b) => b.text || "").join("");
 
+      // Strip SESSION_CONTEXT cleanly
       const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
       const analysisText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText)
         .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
@@ -189,6 +201,7 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
     }
   }
 
+  // ─── FOLLOW-UP UPDATE ────────────────────────────────────────────────────────
   if (type === "followup") {
     if (!updateImage) {
       return { statusCode: 400, body: JSON.stringify({ error: "No screenshot provided" }) };
@@ -204,7 +217,7 @@ CRITICAL PRICE READING RULES:
 - The ONLY price you should read is the highlighted label on the RIGHT-HAND price scale — usually green or white, next to the most recent candle on the right edge.
 - Never use the C (close) value from the header as current price under any circumstances.
 
-Your job: look at the fresh screenshot and give a short update. Write in plain english — a beginner must understand exactly what to do.
+Your job: look at the fresh 1H screenshot and give a short update. Write in plain english — a beginner must understand exactly what to do.
 
 You have FIVE possible responses:
 
@@ -231,7 +244,7 @@ Current price: [read from RIGHT-HAND scale only]
 [One sentence on what still needs to happen.]
 
 Still watching:
-⬇ Set alert at: [pullback level] — send 1H screenshot when hit
+⬇ Zone: [price]–[price] — set alert at [near edge], send 1H screenshot when hit
 ⬆ Set alert at: [breakout level] — send 4H + 1H screenshot when hit
 
 3. PRICE TOOK OFF — BREAKOUT
@@ -257,19 +270,30 @@ Keep the whole response under 15 lines. No fluff. No jargon.
 
 After your response, append ---SESSION_CONTEXT--- followed by an updated compact summary reflecting the latest situation.`;
 
+    // Build conversation for context
     const messages = [];
 
+    // Add session context as first message if available
     if (sessionContext) {
-      messages.push({ role: "user", content: `Here is the higher timeframe context from the original analysis:\n\n${sessionContext}` });
-      messages.push({ role: "assistant", content: "Understood. I have the higher timeframe context. Ready for follow-up updates." });
+      messages.push({
+        role: "user",
+        content: `Here is the higher timeframe context from the original analysis:\n\n${sessionContext}`,
+      });
+      messages.push({
+        role: "assistant",
+        content: "Understood. I have the higher timeframe context. Ready for follow-up updates.",
+      });
     }
 
+    // Add conversation history
     if (conversationHistory && conversationHistory.length > 0) {
       conversationHistory.forEach((msg) => {
         messages.push({ role: msg.role, content: msg.content });
       });
     }
 
+    // Add the new update
+    // Build the update message — supports 1 or 2 images
     const updateContent = [];
     updateContent.push({ type: "image", source: { type: "base64", media_type: mediaType, data: base64 } });
     if (updateImage2) {
@@ -278,7 +302,7 @@ After your response, append ---SESSION_CONTEXT--- followed by an updated compact
       updateContent.push({ type: "image", source: { type: "base64", media_type: mediaType2, data: base642 } });
       updateContent.push({ type: "text", text: `Fresh screenshots for ${instrument}. First image is the 4H chart, second image is the 1H chart. Read current price from the GREEN label on the RIGHT-HAND scale of the 1H chart — not the header bar. Has the setup formed? Give me a short update.` });
     } else {
-      updateContent.push({ type: "text", text: `Fresh screenshot for ${instrument}. Read current price from the GREEN label on the RIGHT-HAND scale — not the header bar. Has the setup formed? Give me a short update.` });
+      updateContent.push({ type: "text", text: `Fresh 1H screenshot for ${instrument}. Read current price from the GREEN label on the RIGHT-HAND scale — not the header bar. Has the setup formed? Give me a short update.` });
     }
 
     messages.push({ role: "user", content: updateContent });
@@ -298,10 +322,12 @@ After your response, append ---SESSION_CONTEXT--- followed by an updated compact
       const data = await response.json();
       const fullText = data.content.map((b) => b.text || "").join("");
 
+      // Strip SESSION_CONTEXT — remove everything from the marker onwards
       const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
       const updateText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText).trim();
       const updatedContext = scIndex !== -1 ? fullText.substring(scIndex + 21).trim() : sessionContext;
 
+      // Also strip any partial SESSION_CONTEXT mention that snuck through
       const cleanText = updateText
         .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
         .replace(/SESSION_CONTEXT[:\s]*/gi, '')
