@@ -482,36 +482,30 @@
     };
 
     function detectRequiredSlots(responseText) {
-      // Scan a window of lines around every "send/when it hits" instruction.
-      // Timeframes are often on the SAME line ("send 4H + 1H screenshot")
-      // or the NEXT line ("When it hits: send a fresh Daily + 4H screenshot here").
-      // Collect ALL timeframes mentioned near any send instruction.
-
-      const lines = responseText.split('\n');
-      const upper = responseText.toUpperCase();
-
-      // First check: does the full response mention Daily or 4H near a send instruction?
-      // Build a combined string of all lines that are within 2 lines of a send/screenshot/when it hits line
+      // Strip markdown formatting first so **4H** becomes 4H
+      const stripped = responseText.replace(/\*+/g, '').replace(/_+/g, '');
+      const lines = stripped.split('\n');
       const relevantLines = new Set();
+
       lines.forEach((line, i) => {
         const l = line.toLowerCase();
-        if (l.includes('send') || l.includes('screenshot') || l.includes('when it hits') || l.includes('upload')) {
-          // Include this line and 2 lines either side
-          for (let j = Math.max(0, i - 2); j <= Math.min(lines.length - 1, i + 2); j++) {
+        if (l.includes('send') || l.includes('screenshot') || l.includes('when it hits') || l.includes('upload') || l.includes('fresh')) {
+          for (let j = Math.max(0, i - 3); j <= Math.min(lines.length - 1, i + 3); j++) {
             relevantLines.add(j);
           }
         }
       });
 
-      if (relevantLines.size === 0) return ['1h'];
+      // If nothing found, scan the whole response for timeframe mentions near any action word
+      const scanText = relevantLines.size > 0
+        ? Array.from(relevantLines).map(i => lines[i]).join('\n').toUpperCase()
+        : stripped.toUpperCase();
 
-      const context = Array.from(relevantLines).map(i => lines[i]).join('\n').toUpperCase();
       const slots = [];
-
-      if (context.includes('WEEKLY')) slots.push('weekly');
-      if (context.includes('DAILY')) slots.push('daily');
-      if (context.includes('4H') || context.includes('4-HOUR')) slots.push('4h');
-      if (context.includes('1H') || context.includes('1-HOUR') || slots.length === 0) {
+      if (scanText.includes('WEEKLY')) slots.push('weekly');
+      if (scanText.includes('DAILY')) slots.push('daily');
+      if (scanText.match(/\b4H\b/) || scanText.includes('4-HOUR') || scanText.includes('4H +') || scanText.includes('+ 4H')) slots.push('4h');
+      if (scanText.match(/\b1H\b/) || scanText.includes('1-HOUR') || slots.length === 0) {
         if (!slots.includes('1h')) slots.push('1h');
       }
 
