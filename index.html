@@ -833,7 +833,7 @@
       document.getElementById('monitorSection').className = 'monitor-section visible';
 
       // After initial analysis, detect what AI is asking for
-      const detectedSlots = detectRequiredSlots(data.result);
+      const detectedSlots = detectRequiredSlots(text);
       buildUploadZone(detectedSlots);
 
       document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
