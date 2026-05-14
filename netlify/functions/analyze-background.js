@@ -184,7 +184,7 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: "claude-sonnet-4-5-20250929", max_tokens: 2500, system: systemPrompt, messages: [{ role: "user", content }] }),
+        body: JSON.stringify({ model: "claude-sonnet-4-5-20250929", max_tokens: 1200, system: systemPrompt, messages: [{ role: "user", content }] }),
       });
 
       if (!response.ok) {
