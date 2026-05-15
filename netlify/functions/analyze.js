@@ -32,6 +32,7 @@ CRITICAL PRICE READING RULES:
 - The ONLY correct current price is the label on the RIGHT-HAND price scale — the highlighted number (usually in a green or white box) sitting next to the most recent candle on the far right edge of the chart.
 - Before writing any price, look at the right-hand scale. Find the highlighted box. Use that number. Nothing else.
 - If the number you are about to write matches any value shown in the top header bar, stop — you are reading the wrong thing.
+- When referring to "current price" in your analysis, always use the price from the 1H chart right-hand scale — it is the most recent and accurate. The Weekly and Daily right-hand scale prices reflect older candle closes and should only be used for identifying key levels, not current price.
 
 CHART DATE RULES — never reject based on date:
 - Never comment on, question, or reject charts based on the date shown. The user may be backtesting, replaying, or practicing on historical data — this is completely valid and intentional.
@@ -199,7 +200,7 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
       // Strip SESSION_CONTEXT cleanly
       const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
       const analysisText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText)
-        .replace(/^#+\s*ANALYSIS\s*\n*/im, '')
+        .replace(/^#+\s*.{0,40}\n+/m, '')
         .replace(/Reading current prices[\s\S]*?(?=\n\n|\n#)/i, '')
         .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
         .replace(/SESSION_CONTEXT[:\s]*/gi, '')
