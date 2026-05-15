@@ -176,6 +176,8 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
         .replace(/^#+\s*.+\n*/gm, '')
         .replace(/\*\*([^*]+)\*\*/g, '$1')
         .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/\*\*/g, '')
+        .replace(/^---\s*$/gm, '')
         .replace(/SESSION_CONTEXT[\s\S]*/gi, '')
         .replace(/explanation for context[\s\S]*?(?=confidence:|━━━|$)/gi, '')
         .replace(/\n{3,}/g, '\n\n')
@@ -324,6 +326,8 @@ After your response, append ---SESSION_CONTEXT--- followed by an updated compact
         .replace(/^#+\s*.+\n*/gm, '')
         .replace(/\*\*([^*]+)\*\*/g, '$1')
         .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/\*\*/g, '')
+        .replace(/^---\s*$/gm, '')
         .replace(/SESSION_CONTEXT[\s\S]*/gi, '')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
