@@ -82,31 +82,30 @@ If LONG or SHORT (Grade A, B, or C):
 [LONG 📈 or SHORT 📉] — Grade [A/B/C] — [X]% confidence
 [One sentence explaining the setup like you're talking to a friend. No jargon.]
 
+━━━ HOW TO ENTER ━━━
+Entry zone:   [price]–[price]  ← price can react anywhere in this range
+Wait for:     [exact confirmation — e.g. "a 1H candle to close above 1.08550 with a strong bullish body"]
+Then:         Enter at market price when that candle closes. Do not place an order before seeing the confirmation.
+Expires:      If confirmation doesn't happen within [X] days — cancel and move on.
+
 ━━━ YOUR LEVELS ━━━
-Entry:      [price]
-Stop Loss:  [price]  ← exit if price closes below/above this
+Stop Loss:  [price]  ← exit immediately if a 1H candle closes below/above this
 
-IMPORTANT — calculate RR precisely using this method every time:
-Stop distance = absolute difference between Entry and Stop Loss
-TP1 RR = TP1 distance from entry ÷ Stop distance (round to 1 decimal)
-TP2 RR = TP2 distance from entry ÷ Stop distance (round to 1 decimal)
-TP3 RR = TP3 distance from entry ÷ Stop distance (round to 1 decimal)
-Never guess or estimate — divide the exact pip distances.
+IMPORTANT — calculate RR precisely:
+Stop distance = |confirmation price - Stop Loss|
+TP1 RR = TP1 distance ÷ Stop distance (round to 1 decimal)
+TP2 RR = TP2 distance ÷ Stop distance (round to 1 decimal)
+TP3 RR = TP3 distance ÷ Stop distance (round to 1 decimal)
 
-TP1:        [price]  ← take off HALF your position here (RR 1:[calculated])
-TP2:        [price]  ← take off a QUARTER here (RR 1:[calculated])
-TP3:        [price]  ← let the last bit run to here (RR 1:[calculated])
-
-━━━ BEFORE YOU ENTER ━━━
-Zone:       [price]–[price]  ← price can enter anywhere in this range
-Enter when: [e.g. "a 1H candle closes back above the bottom of the zone" — not an exact pip]
-[If no reaction within X days: cancel and move on.]
+TP1:  [price]  ← close HALF your position here (RR 1:[calculated])
+TP2:  [price]  ← close a QUARTER here (RR 1:[calculated])
+TP3:  [price]  ← let the last bit run (RR 1:[calculated])
 
 ━━━ WHILE IN THE TRADE ━━━
-Once TP1 hits → move your stop to your entry price. You cannot lose money on the trade after that.
-[Any other specific management note if relevant.]
+Once TP1 hits → move your stop to your entry price. You cannot lose money after that.
+[Any other specific trade management note if relevant.]
 
-⚠️  [One risk warning in plain english — e.g. news event, spread warning, volatile conditions.]
+⚠️  [One risk warning in plain english.]
 
 ---
 
@@ -205,7 +204,12 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
       // Strip SESSION_CONTEXT cleanly
       const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
       const analysisText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText)
-        .replace(/^#+\s*.{0,40}\n+/m, '')
+        .replace(/^#+\s*.{0,60}\n+/gm, (match) => {
+          // Only strip lines that are pure headers (## LONG, ## ANALYSIS etc)
+          // Keep lines that are part of the actual content
+          if (match.match(/^#+\s*(LONG|SHORT|ANALYSIS|EUR|GBP|XAU|BTC|NAS|S&P|WTI|DEVELOPING)/i)) return '';
+          return match;
+        })
         .replace(/Reading current prices[\s\S]*?(?=\n\n|\n#)/i, '')
         .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
         .replace(/SESSION_CONTEXT[:\s]*/gi, '')
@@ -249,15 +253,16 @@ You have FIVE possible responses:
 ✅ ENTER NOW
 [One sentence explaining what you see that confirms the entry.]
 
+━━━ HOW TO ENTER ━━━
+Enter now at: market price (read from right-hand scale)
+Confirmed — no need to wait for another candle.
+
 ━━━ YOUR LEVELS ━━━
-Entry:      [price]
 Stop Loss:  [price]  ← exit if price closes below/above this
-
-Calculate RR: Stop distance = |Entry - SL|. Divide each TP distance by stop distance.
-
-TP1:        [price]  ← take off HALF here (RR 1:[calculated])
-TP2:        [price]  ← take off a QUARTER here (RR 1:[calculated])
-TP3:        [price]  ← let the last bit run (RR 1:[calculated])
+Calculate RR: Stop distance = |entry - SL|. Divide each TP distance by stop distance.
+TP1:  [price]  ← close HALF here (RR 1:[calculated])
+TP2:  [price]  ← close a QUARTER here (RR 1:[calculated])
+TP3:  [price]  ← let the last bit run (RR 1:[calculated])
 
 Once TP1 hits → move stop to entry. You cannot lose after that.
 ⚠️ [One risk warning if relevant.]
