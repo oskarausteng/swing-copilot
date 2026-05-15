@@ -200,24 +200,6 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Risk : Reward Target</div>
-        <div class="rr-top">
-          <div>
-            <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:2px;">Target</div>
-            <div class="rr-big" id="rrDisplay">1 : 3</div>
-            <div class="rr-badge" id="rrBadge">Selected: 1:3</div>
-          </div>
-          <div class="rr-stats">
-            <div><div class="rr-stat-label">Min winrate</div><div class="rr-stat-val" id="rrWinrate" style="color:#059669;">25%</div></div>
-            <div><div class="rr-stat-label">Profit / $100 risk</div><div class="rr-stat-val" id="rrProfit">$300</div></div>
-          </div>
-        </div>
-        <input type="range" id="rrSlider" min="2" max="10" step="1" value="3" />
-        <div class="rr-labels"><span>1:2 higher winrate</span><span>1:10 lower winrate</span></div>
-        <div class="rr-warning" id="rrWarning" style="display:none;"></div>
-      </div>
-
-      <div class="card">
         <div class="card-title">Trade Context</div>
         <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;">News environment this week</div>
         <div class="tag-row" id="newsTags">
@@ -337,7 +319,7 @@
     ];
     const LOADING_MSGS = ['Reading Weekly structure...','Checking Daily trend...','Confirming 4H setup...','Evaluating 1H entry...','Grading signal quality...'];
 
-    let instrument = '', rr = 3, newsCtx = '';
+    let instrument = '', newsCtx = '';
     let uploads = { W: null, D: null, '4h': null, '1h': null };
     let updateImageData = null;
     let freshD = null, fresh4h = null;
@@ -368,21 +350,6 @@
       document.getElementById('selectedRow').textContent = instrument ? instrument + ' (custom)' : '';
       checkReady();
     });
-
-    // ── RR ──
-    document.getElementById('rrSlider').addEventListener('input', function() { updateRR(+this.value); });
-    function updateRR(val) {
-      rr = val;
-      document.getElementById('rrDisplay').textContent = '1 : ' + rr;
-      document.getElementById('rrBadge').textContent = 'Selected: 1:' + rr;
-      const mw = Math.round(100 / (1 + rr));
-      document.getElementById('rrWinrate').textContent = mw + '%';
-      document.getElementById('rrProfit').textContent = '$' + (rr * 100);
-      const w = document.getElementById('rrWarning');
-      w.style.display = rr >= 7 ? 'block' : 'none';
-      if (rr >= 7) w.textContent = '⚠ At 1:' + rr + ' setups are rare — do not force entries.';
-    }
-    updateRR(3);
 
     // ── News tags ──
     document.querySelectorAll('#newsTags .tag').forEach(t => {
@@ -686,7 +653,7 @@
       try {
         const res = await fetch('/.netlify/functions/analyze', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'initial', instrument, rr, news: newsCtx || 'not specified', notes, images: [uploads.W, uploads.D, uploads['4h'], uploads['1h']] }),
+          body: JSON.stringify({ type: 'initial', instrument, news: newsCtx || 'not specified', notes, images: [uploads.W, uploads.D, uploads['4h'], uploads['1h']] }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || data.message || `Server error ${res.status}`);
@@ -839,7 +806,7 @@
 
       const sigCls = signal === 'LONG' ? 'sig-long' : signal === 'SHORT' ? 'sig-short' : signal === 'DEVELOPING' ? 'sig-developing' : 'sig-none';
 
-      document.getElementById('resultHeader').innerHTML = `<span class="grade-badge grade-${grade}">Grade ${grade}</span><span class="signal-pill ${sigCls}">${signal}</span><span style="font-size:12px;color:var(--text-tertiary);margin-left:4px;">${instrument} · 1:${rr} RR</span>`;
+      document.getElementById('resultHeader').innerHTML = `<span class="grade-badge grade-${grade}">Grade ${grade}</span><span class="signal-pill ${sigCls}">${signal}</span><span style="font-size:12px;color:var(--text-tertiary);margin-left:4px;">${instrument}</span>`;
       document.getElementById('resultBody').textContent = text;
       document.getElementById('resultCard').className = 'result-card visible';
 
