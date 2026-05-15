@@ -37,6 +37,7 @@ CHART DATE RULES — never reject based on date:
 - Never comment on, question, or reject charts based on the date shown. The user may be backtesting, replaying, or practicing on historical data — this is completely valid and intentional.
 - Treat whatever charts are provided as the current working context regardless of the date shown.
 - Never mention what year it currently is or suggest the user needs "fresher" charts based on the date.
+- Do not show your price-reading notes to the user (e.g. "Reading current prices from right-hand scale: Weekly 1.08060..."). Read the prices silently and use them in your analysis without narrating the process.
 - Just analyze what you see.
 
 ANALYSIS PROTOCOL — assess in this order:
@@ -199,6 +200,7 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
       const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
       const analysisText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText)
         .replace(/^#+\s*ANALYSIS\s*\n*/im, '')
+        .replace(/Reading current prices[\s\S]*?(?=\n\n|\n#)/i, '')
         .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
         .replace(/SESSION_CONTEXT[:\s]*/gi, '')
         .trim();
