@@ -141,16 +141,21 @@ If NO TRADE or REJECT:
 
 ━━━ WHAT TO WATCH ━━━
 
-⬇ If price pulls back first:
-   Alert zone: [price]–[price]
-   Set alert at: [near edge of zone — price hits this first]
-   When it hits: send a fresh 1H screenshot here
-   Enter when: [e.g. "1H rejection candle anywhere in the zone"]
+IMPORTANT — before writing alerts, note where current price IS right now:
+- One alert must be ABOVE current price, one must be BELOW current price.
+- Never put both alerts on the same side of current price.
+- The near edge rule: alert at whichever edge of the zone price reaches FIRST given its current direction.
 
-⬆ If price takes off without you:
-   Set alert at: [price]
+[Scenario 1 — the setup you are watching for, e.g. pullback to resistance for a short]:
+   Alert zone: [price]–[price]
+   Set alert at: [near edge — price hits this first]
+   When it hits: send a fresh 1H screenshot here
+   Enter when: [exact condition]
+
+[Scenario 2 — the opposite move, e.g. if price keeps dropping instead]:
+   Set alert at: [price on the OPPOSITE side of current price from scenario 1]
    When it hits: send a fresh 4H + 1H screenshot here
-   Don't chase before the alert — wait for it to come to you.
+   [One sentence on what changes and what to look for]
 
 Confidence: [X]% (Structure [X]/10 | Timing [X]/10 | News risk [X]/10 | TF alignment [X]/10)
 ---
