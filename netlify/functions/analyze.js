@@ -198,6 +198,7 @@ Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- foll
       // Strip SESSION_CONTEXT cleanly
       const scIndex = fullText.indexOf("---SESSION_CONTEXT---");
       const analysisText = (scIndex !== -1 ? fullText.substring(0, scIndex) : fullText)
+        .replace(/^#+\s*ANALYSIS\s*\n*/im, '')
         .replace(/\*\*SESSION_CONTEXT[:\*]*\**/gi, '')
         .replace(/SESSION_CONTEXT[:\s]*/gi, '')
         .trim();
