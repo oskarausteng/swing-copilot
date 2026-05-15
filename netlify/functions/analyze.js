@@ -15,15 +15,13 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid request body" }) };
   }
 
-  const { type, instrument, rr, news, notes, images, updateImage, updateImage2, sessionContext, conversationHistory } = body;
+  const { type, instrument, news, notes, images, updateImage, updateImage2, sessionContext, conversationHistory } = body;
 
   // ─── INITIAL ANALYSIS ────────────────────────────────────────────────────────
   if (type === "initial") {
     if (!instrument || !images || images.length !== 4) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing instrument or 4 chart images" }) };
     }
-
-    const minWin = Math.round((1 / (1 + rr)) * 100);
 
     const systemPrompt = `You are an expert swing trader and technical analyst performing strict 4-timeframe top-down analysis.
 
@@ -181,7 +179,7 @@ Format it as plain key:value lines, concise.`;
 
     content.push({
       type: "text",
-      text: `Instrument: ${instrument} | RR: 1:${rr} (min ${minWin}% winrate) | News: ${news || "not specified"}${notes ? " | Notes: " + notes : ""}
+      text: `Instrument: ${instrument} | News: ${news || "not specified"}${notes ? " | Notes: " + notes : ""}
 
 Analyze all 4 timeframes. After your analysis, append ---SESSION_CONTEXT--- followed by the compact summary.`,
     });
