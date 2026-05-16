@@ -88,7 +88,10 @@
     .grade-D { background: #EDE9FE; color: #4C1D95; border: 1.5px solid #7C3AED; }
     .signal-pill { font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
     .sig-long { background: #D1FAE5; color: #064E3B; } .sig-short { background: #FEE2E2; color: #7F1D1D; } .sig-none { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); } .sig-developing { background: #EDE9FE; color: #4C1D95; }
-    .result-body { padding: 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.8; white-space: pre-wrap; }
+    .result-body { padding: 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.8; }
+    .result-body-text { white-space: pre-wrap; }
+    .confirmation-box { margin-top: 12px; padding: 10px 14px; background: #FFFBEB; border: 1.5px solid #F59E0B; border-radius: var(--radius-sm); font-size: 12px; color: #78350F; line-height: 1.6; }
+    .confirmation-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #D97706; margin-bottom: 4px; }
     .loading { display: none; text-align: center; padding: 28px; }
     .loading.visible { display: block; }
     .loading-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; }
@@ -888,7 +891,17 @@
       const sigCls = signal === 'LONG' ? 'sig-long' : signal === 'SHORT' ? 'sig-short' : signal === 'DEVELOPING' ? 'sig-developing' : 'sig-none';
 
       document.getElementById('resultHeader').innerHTML = `<span class="grade-badge grade-${grade}">Grade ${grade}</span><span class="signal-pill ${sigCls}">${signal}</span><span style="font-size:12px;color:var(--text-tertiary);margin-left:4px;">${instrument}</span>`;
-      document.getElementById('resultBody').textContent = text;
+
+      // Split out "Confirmation needed" line and display it as a highlighted box
+      const confMatch = text.match(/Confirmation needed[:\s]+(.+?)(?:
+|$)/is);
+      let bodyText = text;
+      let confHtml = '';
+      if (confMatch) {
+        bodyText = text.substring(0, confMatch.index).trim();
+        confHtml = `<div class="confirmation-box"><div class="confirmation-label">⚡ Confirmation needed</div>${confMatch[1].trim()}</div>`;
+      }
+      document.getElementById('resultBody').innerHTML = `<div class="result-body-text">${bodyText.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>${confHtml}`;
       document.getElementById('resultCard').className = 'result-card visible';
 
       document.getElementById('setupForm').style.display = 'none';
@@ -896,8 +909,7 @@
       document.getElementById('newsContextCard').style.display = 'block';
       initNewsCard();
 
-      const detectedSlots = detectRequiredSlots(text);
-      buildUploadZone(detectedSlots);
+      buildUploadZone(['1h']);
 
       document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
