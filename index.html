@@ -301,6 +301,8 @@
   </div>
 
   <script>
+    const API_URL = 'https://swing-copilot-api-production.up.railway.app/analyze';
+
     const INSTRUMENTS = [
       { id: 'EUR/USD', label: 'EUR/USD', icon: 'ti-currency-euro' },
       { id: 'GBP/USD', label: 'GBP/USD', icon: 'ti-currency-pound' },
@@ -327,6 +329,11 @@
     let conversationHistory = [];
     let disclaimerOpen = false;
     let msgTimer = null, msgIdx = 0;
+
+    // Helper: strip data URL prefix to get raw base64
+    function toBase64(dataUrl) {
+      return dataUrl.split(',')[1];
+    }
 
     // ── Instruments ──
     const grid = document.getElementById('instrumentGrid');
@@ -377,8 +384,6 @@
         const file = this.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = async ev => {
-          // Weekly and Daily: smaller/lower quality (structure only, no precise price needed)
-          // 4H and 1H: higher quality (price labels must be readable)
           const isHigherTF = slot.key === 'W' || slot.key === 'D';
           const compressed = isHigherTF
             ? await compressImage(ev.target.result, 900, 0.78)
@@ -425,7 +430,7 @@
       document.getElementById('disclaimerArrow').textContent = disclaimerOpen ? '▲ Hide' : '▼ Show';
     });
 
-    // ── Image compression — resize to max 1200px before encoding ──
+    // ── Image compression ──
     function compressImage(dataUrl, maxWidth = 1200, quality = 0.92) {
       return new Promise(resolve => {
         const img = new Image();
@@ -440,11 +445,9 @@
         img.src = dataUrl;
       });
     }
-    // Parses the last AI response to figure out what screenshots to ask for
-    // then rebuilds the upload zone to match exactly
 
     let updateImages = [];
-    let requiredSlots = []; // array of {key, label, sub, fileInputId}
+    let requiredSlots = [];
 
     const SLOT_DEFINITIONS = {
       'weekly': { key: 'weekly', label: 'Weekly Chart', sub: '2-3 years back', color: '#1E3A8A', bg: '#DBEAFE' },
@@ -454,21 +457,14 @@
     };
 
     function detectRequiredSlots(responseText) {
-      // Find the start of the actionable section
       const markers = ['━━━ WHAT TO WATCH', 'WHAT TO WATCH', 'Still watching', 'Set alert at', 'When it hits'];
       let startIdx = -1;
       for (const marker of markers) {
         const idx = responseText.indexOf(marker);
         if (idx !== -1) { startIdx = idx; break; }
       }
-
-      // Scan from the actionable section to end (or whole response if no marker found)
       const scanSection = startIdx !== -1 ? responseText.substring(startIdx) : responseText;
-
-      // Strip markdown
       const upper = scanSection.replace(/\*+/g, '').replace(/_+/g, '').toUpperCase();
-
-      // Only look at lines that are near a "send/screenshot/when it hits" instruction
       const lines = upper.split('\n');
       const relevantLines = new Set();
       lines.forEach((line, i) => {
@@ -478,11 +474,9 @@
           }
         }
       });
-
       const context = relevantLines.size > 0
         ? Array.from(relevantLines).map(i => lines[i]).join('\n')
         : upper;
-
       const slots = [];
       if (context.includes('WEEKLY')) slots.push('weekly');
       if (context.includes('DAILY')) slots.push('daily');
@@ -490,22 +484,17 @@
       if (context.match(/\b1H\b/) || context.includes('1-HOUR') || slots.length === 0) {
         if (!slots.includes('1h')) slots.push('1h');
       }
-
       return slots.length > 0 ? slots : ['1h'];
     }
 
     function buildUploadZone(slotKeys) {
       requiredSlots = slotKeys.map(k => SLOT_DEFINITIONS[k]);
       updateImages = new Array(slotKeys.length).fill(null);
-
       const container = document.getElementById('dynamicUploadZone');
       container.innerHTML = '';
-
-      // Remove old dynamic file inputs
       document.querySelectorAll('.dynamic-file-input').forEach(el => el.remove());
 
       if (slotKeys.length === 1) {
-        // Single zone — full width
         const slot = requiredSlots[0];
         const inp = createFileInput(slot.key, 0);
         const zone = document.createElement('div');
@@ -521,7 +510,6 @@
         zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
         container.appendChild(zone);
       } else {
-        // Multiple zones — side by side grid
         const grid = document.createElement('div');
         grid.style.cssText = 'display:grid;grid-template-columns:repeat(' + slotKeys.length + ',1fr);gap:8px;';
         requiredSlots.forEach((slot, i) => {
@@ -543,13 +531,11 @@
         container.appendChild(grid);
       }
 
-      // Update monitor header
       const labels = requiredSlots.map(s => s.label).join(' + ');
       document.getElementById('monitorTitle').textContent = 'Send update — ' + labels;
       document.getElementById('monitorSub').textContent = requiredSlots.length > 1
         ? 'Upload each chart screenshot below'
         : 'Upload a fresh screenshot when price moves';
-
       document.getElementById('updateBtn').disabled = true;
       document.getElementById('updateBtnText').textContent = 'Upload screenshot' + (slotKeys.length > 1 ? 's' : '') + ' first';
     }
@@ -562,7 +548,6 @@
       inp.style.display = 'none';
       inp.id = 'dynFile_' + key;
       document.body.appendChild(inp);
-
       inp.addEventListener('change', function() {
         const file = this.files[0]; if (!file) return;
         const reader = new FileReader();
@@ -581,7 +566,6 @@
         reader.readAsDataURL(file);
         this.value = '';
       });
-
       return inp;
     }
 
@@ -598,12 +582,6 @@
         btn.disabled = true;
         txt.textContent = `Upload ${total - loaded} more screenshot${total - loaded > 1 ? 's' : ''} first`;
       }
-    }
-
-    function resetUploadZone() {
-      // Re-detect from last response or default to 1H
-      updateImages = [];
-      buildUploadZone(['1h']);
     }
 
     // ── Fresh chart zones ──
@@ -651,16 +629,21 @@
       document.getElementById('resultCard').className = 'result-card';
 
       try {
-        const res = await fetch('https://swing-copilot-api-production.up.railway.app/analyze', {
+        const res = await fetch(API_URL, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'initial', instrument, news: newsCtx || 'not specified', notes, images: [uploads.W, uploads.D, uploads['4h'], uploads['1h']] }),
+          body: JSON.stringify({
+            type: 'initial',
+            instrument,
+            news: newsCtx || 'not specified',
+            notes,
+            images: [uploads.W, uploads.D, uploads['4h'], uploads['1h']].map(toBase64),
+          }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || data.message || `Server error ${res.status}`);
 
         sessionContext = data.sessionContext || '';
         conversationHistory = [];
-
         showInitialResult(data.result);
       } catch (err) { showError(err.message); }
       finally { setLoading(false, 'initial'); }
@@ -673,13 +656,13 @@
       setLoading(true, 'update'); hideError();
 
       try {
-        const res = await fetch('https://swing-copilot-api-production.up.railway.app/analyze', {
+        const res = await fetch(API_URL, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             type: 'followup',
             instrument,
-            updateImage: updateImages[0],        // primary image (1H or first)
-            updateImage2: updateImages[1] || null, // optional second image (4H)
+            updateImage: toBase64(updateImages[0]),
+            updateImage2: updateImages[1] ? toBase64(updateImages[1]) : null,
             sessionContext,
             conversationHistory,
           }),
@@ -701,7 +684,6 @@
           document.getElementById('freshChartsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // Rebuild upload zone to match what AI just asked for
         const detectedSlots = detectRequiredSlots(data.result);
         buildUploadZone(detectedSlots);
 
@@ -716,14 +698,13 @@
       setLoading(true, 'update'); hideError();
 
       try {
-        // Send fresh daily + 4H as a context update
-        const freshMsg = '[User sent fresh Daily and 4H charts to update structure context]';
-        const res = await fetch('https://swing-copilot-api-production.up.railway.app/analyze', {
+        const res = await fetch(API_URL, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             type: 'followup',
             instrument,
-            updateImage: freshD, // use daily as primary image
+            updateImage: toBase64(freshD),
+            updateImage2: toBase64(fresh4h),
             sessionContext,
             conversationHistory: [
               ...conversationHistory,
@@ -741,7 +722,6 @@
         addConvoEntry(data.result, 'fresh-charts');
         document.getElementById('freshChartsCard').className = 'fresh-charts-card';
 
-        // Reset fresh zones
         freshD = null; fresh4h = null;
         ['freshZoneD', 'freshZone4h'].forEach((id, i) => {
           const labels = ['Daily Chart', '4H Chart'];
@@ -810,11 +790,9 @@
       document.getElementById('resultBody').textContent = text;
       document.getElementById('resultCard').className = 'result-card visible';
 
-      // Hide setup form, show monitoring
       document.getElementById('setupForm').style.display = 'none';
       document.getElementById('monitorSection').className = 'monitor-section visible';
 
-      // Detect slots from initial analysis response
       const detectedSlots = detectRequiredSlots(text);
       buildUploadZone(detectedSlots);
 
