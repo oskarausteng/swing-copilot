@@ -773,16 +773,16 @@
       let grade = 'C', signal = 'NO TRADE';
       const gm = upper.match(/GRADE[:\s]+([A-Z]+)/);
       if (gm) {
-        if (gm[1].startsWith('A')) grade = 'A';
+        if (gm[1].includes('REJECT')) grade = 'REJECT';
+        else if (gm[1].startsWith('A')) grade = 'A';
         else if (gm[1].startsWith('B')) grade = 'B';
         else if (gm[1].startsWith('D')) grade = 'D';
-        else if (gm[1].includes('REJECT')) grade = 'REJECT';
         else grade = 'C';
       }
-      if (upper.includes('DEVELOPING SETUP') || upper.includes('DEVELOPING')) { grade = grade === 'C' ? 'D' : grade; signal = 'DEVELOPING'; }
+      if (grade === 'REJECT') { signal = 'NO TRADE'; }
+      else if (upper.includes('DEVELOPING SETUP') || upper.includes('DEVELOPING')) { grade = grade === 'C' ? 'D' : grade; signal = 'DEVELOPING'; }
       else if (upper.match(/\bLONG\b/)) signal = 'LONG';
       else if (upper.match(/\bSHORT\b/)) signal = 'SHORT';
-      if (upper.includes('REJECT') && !upper.includes('DEVELOPING')) { grade = 'REJECT'; signal = 'NO TRADE'; }
 
       const sigCls = signal === 'LONG' ? 'sig-long' : signal === 'SHORT' ? 'sig-short' : signal === 'DEVELOPING' ? 'sig-developing' : 'sig-none';
 
