@@ -5,24 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Swing Copilot</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --green: #1D6B4E; --green-light: #E6F5EE; --green-mid: #1D9E75; --green-dark: #0F4A32; --green-text: #085041;
       --text-primary: #111827; --text-secondary: #4B5563; --text-tertiary: #9CA3AF;
       --bg: #F9FAFB; --bg-card: #FFFFFF; --border: #E5E7EB; --border-light: #F3F4F6;
-      --warning-bg: #FFFBEB; --warning-text: #92400E; --warning-border: #FCD34D;
       --radius: 10px; --radius-sm: 6px;
       --shadow: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
     }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; }
-    .container { max-width: 680px; margin: 0 auto; padding: 24px 16px 60px; }
-    .header { margin-bottom: 28px; }
-    .header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-    .header-icon { width: 36px; height: 36px; background: var(--green); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
-    .header h1 { font-size: 20px; font-weight: 700; }
-    .header-badge { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px; background: var(--green-light); color: var(--green-text); border: 1px solid var(--green); }
-    .header p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* AUTH */
+    .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .auth-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 28px; width: 100%; max-width: 400px; box-shadow: var(--shadow-md); }
+    .auth-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+    .auth-logo-icon { width: 36px; height: 36px; background: var(--green); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+    .auth-logo h1 { font-size: 20px; font-weight: 700; }
+    .auth-tabs { display: flex; margin-bottom: 24px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+    .auth-tab { flex: 1; padding: 9px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--bg); color: var(--text-tertiary); border: none; transition: all 0.15s; }
+    .auth-tab.active { background: var(--green); color: white; }
+    .auth-field { margin-bottom: 14px; }
+    .auth-field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: 5px; }
+    .auth-field input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; outline: none; transition: border-color 0.15s; }
+    .auth-field input:focus { border-color: var(--green); }
+    .auth-msg { font-size: 12px; border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 14px; display: none; }
+    .auth-msg.visible { display: block; }
+    .auth-msg.error { color: #DC2626; background: #FEE2E2; border: 1px solid #FCA5A5; }
+    .auth-msg.success { color: #064E3B; background: #D1FAE5; border: 1px solid #10B981; }
+
+    /* DASHBOARD */
+    .top-bar { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .top-bar-logo { display: flex; align-items: center; gap: 8px; }
+    .top-bar-logo-icon { width: 28px; height: 28px; background: var(--green); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; }
+    .top-bar-logo span { font-size: 15px; font-weight: 700; }
+    .top-bar-actions { display: flex; align-items: center; gap: 8px; }
+    .btn-ghost { font-size: 12px; color: var(--text-tertiary); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 5px 10px; cursor: pointer; }
+    .btn-ghost:hover { color: var(--text-primary); }
+    .btn-new { font-size: 12px; font-weight: 700; color: white; background: var(--green); border: none; border-radius: var(--radius-sm); padding: 7px 14px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    .btn-new:hover { background: var(--green-dark); }
+    .btn-back { background: none; border: none; color: var(--text-tertiary); font-size: 20px; cursor: pointer; padding: 2px; display: flex; align-items: center; }
+    .btn-back:hover { color: var(--text-primary); }
+    .page-body { max-width: 680px; margin: 0 auto; padding: 20px 16px 60px; }
+    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-tertiary); margin-bottom: 12px; }
+    .setup-cards { display: flex; flex-direction: column; gap: 10px; }
+    .setup-card { background: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: var(--shadow); }
+    .setup-card:hover { border-color: var(--green-mid); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .setup-card-info { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+    .setup-card-name { font-size: 15px; font-weight: 700; }
+    .setup-card-badges { display: flex; gap: 6px; }
+    .setup-card-date { font-size: 11px; color: var(--text-tertiary); }
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--text-tertiary); }
+    .empty-state i { font-size: 40px; margin-bottom: 12px; display: block; }
+    .empty-state p { font-size: 14px; margin-bottom: 20px; }
+
+    /* SHARED */
     .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); }
     .card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-tertiary); margin-bottom: 12px; }
     .instrument-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
@@ -33,15 +73,6 @@
     .custom-input { width: 100%; font-size: 13px; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-primary); outline: none; transition: border-color 0.15s; }
     .custom-input:focus { border-color: var(--green); }
     .selected-row { font-size: 12px; font-weight: 600; color: var(--green); margin-top: 6px; min-height: 18px; }
-    .rr-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-    .rr-big { font-size: 28px; font-weight: 700; line-height: 1; }
-    .rr-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--green-light); color: var(--green-text); border: 1px solid var(--green); margin-top: 4px; display: inline-block; }
-    .rr-stats { display: flex; gap: 20px; text-align: right; }
-    .rr-stat-label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 2px; }
-    .rr-stat-val { font-size: 15px; font-weight: 600; }
-    input[type="range"] { width: 100%; accent-color: var(--green); margin: 6px 0; }
-    .rr-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-tertiary); }
-    .rr-warning { font-size: 11px; padding: 6px 10px; border-radius: var(--radius-sm); margin-top: 8px; background: var(--warning-bg); color: var(--warning-text); border: 1px solid var(--warning-border); }
     .tag-row { display: flex; gap: 6px; flex-wrap: wrap; }
     .tag { font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text-tertiary); cursor: pointer; transition: all 0.15s; }
     .tag:hover { border-color: var(--green-mid); color: var(--green-text); }
@@ -101,20 +132,14 @@
     .loading-text { font-size: 13px; color: var(--text-tertiary); }
     .error-box { margin-top: 12px; padding: 12px 14px; background: #FEE2E2; border: 1px solid #FCA5A5; border-radius: var(--radius-sm); font-size: 12px; color: #7F1D1D; display: none; }
     .error-box.visible { display: block; }
-
-    /* ── Monitoring section ── */
     .monitor-section { display: none; margin-top: 16px; }
     .monitor-section.visible { display: block; }
-
-    /* Conversation history */
     .convo-history { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
     .convo-entry { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
     .convo-entry-header { padding: 6px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; gap: 6px; }
     .convo-entry-header.update { background: #F0FDF4; color: var(--green); border-bottom: 1px solid var(--border); }
     .convo-entry-header.fresh-charts { background: #FEF3C7; color: #78350F; border-bottom: 1px solid var(--border); }
     .convo-entry-body { padding: 10px 12px; font-size: 12px; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; background: var(--bg-card); }
-
-    /* Upload 1H update */
     .monitor-card { background: var(--bg-card); border: 1.5px solid var(--green); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
     .monitor-header { background: var(--green); padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
     .monitor-header i { color: white; font-size: 16px; }
@@ -125,13 +150,10 @@
     .followup-upload-zone:hover { border-color: var(--green); background: #D1FAE5; }
     .followup-upload-zone.loaded { border-style: solid; border-color: var(--green); }
     .followup-upload-zone i { font-size: 24px; color: var(--green); }
-    .followup-upload-label { font-size: 12px; font-weight: 600; color: var(--green-text); }
     .followup-upload-sub { font-size: 11px; color: var(--green); }
     .btn-update { width: 100%; padding: 13px; border: none; border-radius: var(--radius); background: var(--green); color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
     .btn-update:hover:not(:disabled) { background: var(--green-dark); }
     .btn-update:disabled { background: var(--border); color: var(--text-tertiary); cursor: not-allowed; }
-
-    /* Fresh charts request */
     .fresh-charts-card { display: none; background: var(--bg-card); border: 1.5px solid #F59E0B; border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
     .fresh-charts-card.visible { display: block; }
     .fresh-charts-header { background: #FEF3C7; padding: 10px 14px; font-size: 12px; font-weight: 700; color: #78350F; display: flex; align-items: center; gap: 8px; }
@@ -145,10 +167,6 @@
     .btn-fresh-submit { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: #D97706; color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .btn-fresh-submit:hover:not(:disabled) { background: #B45309; }
     .btn-fresh-submit:disabled { background: var(--border); color: var(--text-tertiary); cursor: not-allowed; }
-
-    .footer { margin-top: 32px; padding: 12px; font-size: 11px; color: var(--text-tertiary); text-align: center; line-height: 1.6; border-top: 1px solid var(--border); }
-
-    /* ── News context card ── */
     .news-context-card { background: var(--bg-card); border: 1.5px solid #F59E0B; border-radius: var(--radius); overflow: hidden; margin-top: 12px; box-shadow: var(--shadow); }
     .news-context-header { padding: 12px 14px; background: #FFFBEB; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
     .news-arrow { font-size: 11px; color: #92400E; font-weight: 500; }
@@ -158,61 +176,89 @@
     .news-tag { font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 20px; border: 1.5px solid #FCD34D; background: #FFFBEB; color: #92400E; cursor: pointer; transition: all 0.15s; }
     .news-tag:hover { border-color: #F59E0B; background: #FEF3C7; }
     .news-tag.selected { background: #F59E0B; border-color: #D97706; color: white; }
+    .footer { margin-top: 32px; padding: 12px; font-size: 11px; color: var(--text-tertiary); text-align: center; line-height: 1.6; border-top: 1px solid var(--border); }
   </style>
 </head>
 <body>
-  <input type="file" accept="image/*" id="fileW"  style="display:none;" />
-  <input type="file" accept="image/*" id="fileD"  style="display:none;" />
-  <input type="file" accept="image/*" id="file4h" style="display:none;" />
-  <input type="file" accept="image/*" id="file1h" style="display:none;" />
-  <input type="file" accept="image/*" id="fileFreshD"  style="display:none;" />
-  <input type="file" accept="image/*" id="fileFresh4h" style="display:none;" />
 
-  <div class="container">
-    <div class="header">
-      <div class="header-top">
-        <div class="header-icon"><i class="ti ti-chart-line"></i></div>
+<!-- SCREEN: AUTH -->
+<div id="screenAuth" class="screen active">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-icon"><i class="ti ti-chart-line"></i></div>
         <h1>Swing Copilot</h1>
-        <span class="header-badge">📈 SWING ONLY</span>
       </div>
-      <p>Upload 4 charts to start. After that, just keep sending 1H updates — Claude remembers the setup.</p>
-    </div>
-
-    <!-- Always-visible OHLC warning -->
-    <div style="background:#FEF3C7;border:1.5px solid #F59E0B;border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;">
-      <div style="font-size:12px;font-weight:700;color:#78350F;margin-bottom:4px;">⚠️ Required before screenshotting — do this once</div>
-      <div style="font-size:12px;color:#92400E;line-height:1.6;">In TradingView: <strong>Chart Settings → Status Line → uncheck "Chart Values"</strong><br/>This hides the price bar at the top. Without this step Claude reads the wrong price and gives wrong levels.</div>
-    </div>
-
-    <div class="disclaimer-wrap">
-      <div class="disclaimer-toggle" id="disclaimerToggle">
-        <div class="disclaimer-toggle-left"><i class="ti ti-camera" style="font-size:14px;"></i>How to screenshot your charts + your responsibility</div>
-        <span class="disclaimer-arrow" id="disclaimerArrow">▼ Show</span>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Log in</button>
+        <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Sign up</button>
       </div>
-      <div class="disclaimer-content" id="disclaimerContent">
-        <div class="disclaimer-resp"><strong>Your responsibility:</strong> Analysis quality depends entirely on your screenshots. Claude rejects unclear or cropped charts rather than force a bad signal. This is not financial advice — always verify before trading.</div>
+      <div class="auth-msg" id="authMsg"></div>
+      <div class="auth-field"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com" /></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="authPassword" placeholder="••••••••" /></div>
+      <button class="btn-primary" id="authBtn" onclick="handleAuth()">
+        <span id="authBtnText">Log in</span>
+      </button>
+    </div>
+  </div>
+</div>
 
-        <div class="tf-row"><div class="tf-pill tf-w">Weekly</div><div class="tf-text"><strong>2–3 years</strong> visible. Major highs and lows on screen. Price scale on right mandatory.</div></div>
-        <div class="tf-row"><div class="tf-pill tf-d">Daily</div><div class="tf-text"><strong>6–12 months</strong> back. Trend structure and key S/R levels visible.</div></div>
-        <div class="tf-row"><div class="tf-pill tf-4h">4H</div><div class="tf-text"><strong>6–10 weeks</strong> back. Entry zone fully visible with room on both sides.</div></div>
-        <div class="tf-row"><div class="tf-pill tf-1h">1H</div><div class="tf-text"><strong>Last 3–5 days</strong>, zoomed in. Entry trigger centered on screen.</div></div>
-        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-light);">
-          <div class="rule-row"><div class="rule-dot"></div><div><strong>Price scale visible on right</strong> — no scale = rejected.</div></div>
-          <div class="rule-row"><div class="rule-dot"></div><div><strong>No indicators covering candles</strong> — MAs/volume fine, RSI/MACD over price is not.</div></div>
-          <div class="rule-row"><div class="rule-dot"></div><div><strong>Same broker across all charts.</strong></div></div>
+<!-- SCREEN: DASHBOARD -->
+<div id="screenDash" class="screen">
+  <div class="top-bar">
+    <div class="top-bar-logo">
+      <div class="top-bar-logo-icon"><i class="ti ti-chart-line"></i></div>
+      <span>Swing Copilot</span>
+    </div>
+    <div class="top-bar-actions">
+      <button class="btn-ghost" onclick="signOut()">Sign out</button>
+      <button class="btn-new" onclick="showNewAnalysis()"><i class="ti ti-plus" style="font-size:13px;"></i> New Analysis</button>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="section-label" id="dashTitle">Your Setups</div>
+    <div class="setup-cards" id="setupCards"></div>
+  </div>
+</div>
+
+<!-- SCREEN: ANALYSIS -->
+<div id="screenAnalysis" class="screen">
+  <div class="top-bar">
+    <button class="btn-back" onclick="goToDash()"><i class="ti ti-arrow-left"></i></button>
+    <span style="font-size:15px;font-weight:700;flex:1;" id="analysisTitle">New Analysis</span>
+  </div>
+
+  <div class="page-body">
+
+    <div id="setupForm">
+      <div style="background:#FEF3C7;border:1.5px solid #F59E0B;border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:700;color:#78350F;margin-bottom:4px;">⚠️ Required before screenshotting — do this once</div>
+        <div style="font-size:12px;color:#92400E;line-height:1.6;">In TradingView: <strong>Chart Settings → Status Line → uncheck "Chart Values"</strong><br/>This hides the price bar at the top. Without this step Claude reads the wrong price and gives wrong levels.</div>
+      </div>
+      <div class="disclaimer-wrap">
+        <div class="disclaimer-toggle" id="disclaimerToggle">
+          <div class="disclaimer-toggle-left"><i class="ti ti-camera" style="font-size:14px;"></i>How to screenshot your charts + your responsibility</div>
+          <span class="disclaimer-arrow" id="disclaimerArrow">▼ Show</span>
+        </div>
+        <div class="disclaimer-content" id="disclaimerContent">
+          <div class="disclaimer-resp"><strong>Your responsibility:</strong> Analysis quality depends entirely on your screenshots. Claude rejects unclear or cropped charts rather than force a bad signal. This is not financial advice — always verify before trading.</div>
+          <div class="tf-row"><div class="tf-pill tf-w">Weekly</div><div class="tf-text"><strong>2–3 years</strong> visible. Major highs and lows on screen. Price scale on right mandatory.</div></div>
+          <div class="tf-row"><div class="tf-pill tf-d">Daily</div><div class="tf-text"><strong>6–12 months</strong> back. Trend structure and key S/R levels visible.</div></div>
+          <div class="tf-row"><div class="tf-pill tf-4h">4H</div><div class="tf-text"><strong>6–10 weeks</strong> back. Entry zone fully visible with room on both sides.</div></div>
+          <div class="tf-row"><div class="tf-pill tf-1h">1H</div><div class="tf-text"><strong>Last 3–5 days</strong>, zoomed in. Entry trigger centered on screen.</div></div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-light);">
+            <div class="rule-row"><div class="rule-dot"></div><div><strong>Price scale visible on right</strong> — no scale = rejected.</div></div>
+            <div class="rule-row"><div class="rule-dot"></div><div><strong>No indicators covering candles</strong> — MAs/volume fine, RSI/MACD over price is not.</div></div>
+            <div class="rule-row"><div class="rule-dot"></div><div><strong>Same broker across all charts.</strong></div></div>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- Setup form — hidden once analysis starts -->
-    <div id="setupForm">
       <div class="card">
         <div class="card-title">Instrument</div>
         <div class="instrument-grid" id="instrumentGrid"></div>
         <input type="text" class="custom-input" id="customInstrument" placeholder="Or type custom ticker (e.g. GBP/JPY, AAPL...)" style="margin-top:8px;" />
         <div class="selected-row" id="selectedRow"></div>
       </div>
-
       <div class="card">
         <div class="card-title">Trade Context</div>
         <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;">News environment this week</div>
@@ -224,32 +270,26 @@
         </div>
         <textarea id="contextNotes" placeholder="Optional: 'FOMC Wednesday', 'NFP Friday', 'near all-time high'..."></textarea>
       </div>
-
       <div class="card">
         <div class="card-title">4 Chart Screenshots — tap each to upload</div>
         <div class="upload-grid" id="uploadGrid"></div>
       </div>
-
       <button class="btn-primary" id="analyzeBtn" disabled>
-        <i class="ti ti-brain"></i>
-        <span id="analyzeBtnText">Select an instrument to begin</span>
+        <i class="ti ti-brain"></i><span id="analyzeBtnText">Select an instrument to begin</span>
       </button>
     </div>
 
     <div class="error-box" id="errorBox"></div>
-
     <div class="loading" id="loadingBox">
       <div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
       <div class="loading-text" id="loadingText">Analyzing your charts...</div>
     </div>
 
-    <!-- Initial result -->
     <div class="result-card" id="resultCard">
       <div class="result-header" id="resultHeader"></div>
       <div class="result-body" id="resultBody"></div>
     </div>
 
-    <!-- News context card — shown after initial analysis -->
     <div class="news-context-card" id="newsContextCard" style="display:none;">
       <div class="news-context-header" id="newsContextToggle">
         <div style="display:flex;align-items:center;gap:8px;">
@@ -263,63 +303,34 @@
       </div>
       <div class="news-context-body" id="newsContextBody">
         <div class="news-quick-row" id="newsQuickRow"></div>
-        <input type="text" class="custom-input" id="newsCustomInput" placeholder="Or type custom: 'BOC Thursday 2pm', 'earnings Friday'..." style="margin-top:10px;font-size:12px;border-color:#FCD34D;" />
-        <div style="font-size:11px;color:#92400E;margin-top:6px;">Claude will factor these into every follow-up analysis automatically.</div>
+        <input type="text" class="custom-input" id="newsCustomInput" placeholder="Or type custom: 'BOC Thursday 2pm'..." style="margin-top:10px;font-size:12px;border-color:#FCD34D;" />
+        <div style="font-size:11px;color:#92400E;margin-top:6px;">Claude will factor these into every follow-up automatically.</div>
       </div>
     </div>
 
-    <!-- Monitoring section — shown after initial analysis -->
     <div class="monitor-section" id="monitorSection">
-
-      <!-- Conversation history -->
       <div class="convo-history" id="convoHistory"></div>
-
-      <!-- Fresh charts request card — shown when AI asks for it -->
       <div class="fresh-charts-card" id="freshChartsCard">
-        <div class="fresh-charts-header">
-          <i class="ti ti-refresh" style="font-size:14px;"></i>
-          Claude needs fresh higher timeframe charts
-        </div>
+        <div class="fresh-charts-header"><i class="ti ti-refresh" style="font-size:14px;"></i> Claude needs fresh higher timeframe charts</div>
         <div class="fresh-charts-body">
           <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">Upload a fresh Daily and 4H screenshot so Claude can reassess the structure.</div>
           <div class="fresh-upload-grid">
-            <div class="fresh-zone" id="freshZoneD" role="button" tabindex="0">
-              <i class="ti ti-photo"></i>
-              <div class="fresh-zone-label">Daily Chart</div>
-            </div>
-            <div class="fresh-zone" id="freshZone4h" role="button" tabindex="0">
-              <i class="ti ti-photo"></i>
-              <div class="fresh-zone-label">4H Chart</div>
-            </div>
+            <div class="fresh-zone" id="freshZoneD" role="button" tabindex="0"><i class="ti ti-photo"></i><div class="fresh-zone-label">Daily Chart</div></div>
+            <div class="fresh-zone" id="freshZone4h" role="button" tabindex="0"><i class="ti ti-photo"></i><div class="fresh-zone-label">4H Chart</div></div>
           </div>
-          <button class="btn-fresh-submit" id="freshSubmitBtn" disabled>
-            <i class="ti ti-send"></i>
-            <span id="freshSubmitText">Upload both charts first</span>
-          </button>
+          <button class="btn-fresh-submit" id="freshSubmitBtn" disabled><i class="ti ti-send"></i><span id="freshSubmitText">Upload both charts first</span></button>
         </div>
       </div>
-
-      <!-- 1H update card — zone rebuilt dynamically after each response -->
       <div class="monitor-card">
-        <div class="monitor-header">
-          <i class="ti ti-refresh"></i>
-          <div>
-            <div class="monitor-title" id="monitorTitle">Monitoring</div>
-            <div class="monitor-sub" id="monitorSub">Send a screenshot update when price moves</div>
-          </div>
+        <div class="monitor-header"><i class="ti ti-refresh"></i>
+          <div><div class="monitor-title" id="monitorTitle">Monitoring</div><div class="monitor-sub" id="monitorSub">Send a screenshot update when price moves</div></div>
         </div>
         <div class="monitor-body">
           <div id="dynamicUploadZone"></div>
-          <button class="btn-update" id="updateBtn" disabled>
-            <i class="ti ti-send"></i>
-            <span id="updateBtnText">Upload a screenshot first</span>
-          </button>
+          <button class="btn-update" id="updateBtn" disabled><i class="ti ti-send"></i><span id="updateBtnText">Upload a screenshot first</span></button>
         </div>
       </div>
-
-      <button class="btn-secondary" id="newAnalysisBtn" style="margin-top:12px;">
-        ↩ Start a new analysis
-      </button>
+      <button class="btn-secondary" id="backToDashBtn" style="margin-top:12px;">↩ Back to dashboard</button>
     </div>
 
     <div class="loading" id="updateLoadingBox" style="padding:16px;display:none;">
@@ -327,616 +338,566 @@
       <div class="loading-text">Checking the setup...</div>
     </div>
 
-    <div class="footer">
-      For educational purposes only. Not financial advice. All trading involves significant risk of loss.<br />
-      Always verify signals independently before placing any trade.
-    </div>
+    <div class="footer">For educational purposes only. Not financial advice. All trading involves significant risk of loss.</div>
   </div>
 
-  <script>
-    const API_URL = 'https://swing-copilot-api-production.up.railway.app/analyze';
+  <input type="file" accept="image/*" id="fileW" style="display:none;" />
+  <input type="file" accept="image/*" id="fileD" style="display:none;" />
+  <input type="file" accept="image/*" id="file4h" style="display:none;" />
+  <input type="file" accept="image/*" id="file1h" style="display:none;" />
+  <input type="file" accept="image/*" id="fileFreshD" style="display:none;" />
+  <input type="file" accept="image/*" id="fileFresh4h" style="display:none;" />
+</div>
 
-    const INSTRUMENTS = [
-      { id: 'EUR/USD', label: 'EUR/USD', icon: 'ti-currency-euro' },
-      { id: 'GBP/USD', label: 'GBP/USD', icon: 'ti-currency-pound' },
-      { id: 'XAU/USD', label: 'XAU/USD', icon: 'ti-star' },
-      { id: 'BTC/USD', label: 'BTC/USD', icon: 'ti-currency-bitcoin' },
-      { id: 'S&P 500', label: 'S&P 500', icon: 'ti-trending-up' },
-      { id: 'NAS 100', label: 'NAS 100', icon: 'ti-device-laptop' },
-      { id: 'GBP/JPY', label: 'GBP/JPY', icon: 'ti-currency-yen' },
-      { id: 'WTI Oil', label: 'WTI Oil', icon: 'ti-droplet' },
-    ];
-    const TF_SLOTS = [
-      { key: 'W',  fileId: 'fileW',  label: 'Weekly', sub: '2-3 years' },
-      { key: 'D',  fileId: 'fileD',  label: 'Daily',  sub: '6-12 months' },
-      { key: '4h', fileId: 'file4h', label: '4H',     sub: '6-10 weeks' },
-      { key: '1h', fileId: 'file1h', label: '1H',     sub: '3-5 days' },
-    ];
-    const LOADING_MSGS = ['Reading Weekly structure...','Checking Daily trend...','Confirming 4H setup...','Evaluating 1H entry...','Grading signal quality...'];
+<script>
+const API_URL = 'https://swing-copilot-api-production.up.railway.app/analyze';
+const SUPA_URL = 'https://dtoufvweiufrcsveesrd.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0b3VmdndlaXVmcmNzdmVlc3JkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MjQ0NjEsImV4cCI6MjA5NDUwMDQ2MX0.r8vlYT0V3W-9Wygdg_OqGbBejfz62jhC9j5m5_sqjeI';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-    let instrument = '', newsCtx = '';
-    let uploads = { W: null, D: null, '4h': null, '1h': null };
-    let updateImageData = null;
-    let freshD = null, fresh4h = null;
-    let sessionContext = '';
-    let conversationHistory = [];
-    let disclaimerOpen = false;
-    let msgTimer = null, msgIdx = 0;
-    let selectedNewsEvents = new Set();
-    let newsOpen = false;
+const INSTRUMENTS = [
+  { id: 'EUR/USD', label: 'EUR/USD', icon: 'ti-currency-euro' },
+  { id: 'GBP/USD', label: 'GBP/USD', icon: 'ti-currency-pound' },
+  { id: 'XAU/USD', label: 'XAU/USD', icon: 'ti-star' },
+  { id: 'BTC/USD', label: 'BTC/USD', icon: 'ti-currency-bitcoin' },
+  { id: 'S&P 500', label: 'S&P 500', icon: 'ti-trending-up' },
+  { id: 'NAS 100', label: 'NAS 100', icon: 'ti-device-laptop' },
+  { id: 'GBP/JPY', label: 'GBP/JPY', icon: 'ti-currency-yen' },
+  { id: 'WTI Oil', label: 'WTI Oil', icon: 'ti-droplet' },
+];
+const TF_SLOTS = [
+  { key: 'W',  fileId: 'fileW',  label: 'Weekly', sub: '2-3 years' },
+  { key: 'D',  fileId: 'fileD',  label: 'Daily',  sub: '6-12 months' },
+  { key: '4h', fileId: 'file4h', label: '4H',     sub: '6-10 weeks' },
+  { key: '1h', fileId: 'file1h', label: '1H',     sub: '3-5 days' },
+];
+const LOADING_MSGS = ['Reading Weekly structure...','Checking Daily trend...','Confirming 4H setup...','Evaluating 1H entry...','Grading signal quality...'];
+const NEWS_EVENTS = [
+  { id: 'none',   label: '🟢 None this week' },
+  { id: 'fomc',   label: '🔴 FOMC' },
+  { id: 'nfp',    label: '🔴 NFP' },
+  { id: 'cpi',    label: '🔴 CPI' },
+  { id: 'gdp',    label: '🔴 GDP' },
+  { id: 'boe',    label: '🔴 BOE' },
+  { id: 'ecb',    label: '🔴 ECB' },
+  { id: 'boj',    label: '🔴 BOJ' },
+  { id: 'pmi',    label: '🟡 PMI' },
+  { id: 'retail', label: '🟡 Retail Sales' },
+];
+const SLOT_DEFS = {
+  weekly: { label: 'Weekly Chart', sub: '2-3 years back',    color: '#1E3A8A', bg: '#DBEAFE' },
+  daily:  { label: 'Daily Chart',  sub: '6-12 months back',  color: '#064E3B', bg: '#D1FAE5' },
+  '4h':   { label: '4H Chart',     sub: '6-10 weeks back',   color: '#78350F', bg: '#FEF3C7' },
+  '1h':   { label: '1H Chart',     sub: 'Last 3-5 days',     color: '#7F1D1D', bg: '#FEE2E2' },
+};
 
-    const NEWS_EVENTS = [
-      { id: 'none', label: '🟢 None this week' },
-      { id: 'fomc', label: '🔴 FOMC' },
-      { id: 'nfp', label: '🔴 NFP' },
-      { id: 'cpi', label: '🔴 CPI' },
-      { id: 'gdp', label: '🔴 GDP' },
-      { id: 'boe', label: '🔴 BOE' },
-      { id: 'ecb', label: '🔴 ECB' },
-      { id: 'boj', label: '🔴 BOJ' },
-      { id: 'pmi', label: '🟡 PMI' },
-      { id: 'retail', label: '🟡 Retail Sales' },
-    ];
+// State
+let currentUser = null, currentSetupId = null;
+let instrument = '', newsCtx = '';
+let uploads = { W: null, D: null, '4h': null, '1h': null };
+let freshD = null, fresh4h = null;
+let sessionContext = '', conversationHistory = [];
+let disclaimerOpen = false, newsOpen = false;
+let msgTimer = null, msgIdx = 0;
+let selectedNews = new Set();
+let updateImages = [], requiredSlots = [];
 
-    // Helper: strip data URL prefix to get raw base64
-    function toBase64(dataUrl) {
-      return dataUrl.split(',')[1];
-    }
+// Utilities
+const toBase64 = d => d.split(',')[1];
+const showScreen = id => { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); };
+const showErr = msg => { const b = document.getElementById('errorBox'); b.textContent = '⚠ ' + msg; b.className = 'error-box visible'; };
+const hideErr = () => { document.getElementById('errorBox').className = 'error-box'; };
 
-    // Build news context string for API calls
-    function getNewsContext() {
-      const custom = document.getElementById('newsCustomInput') ? document.getElementById('newsCustomInput').value.trim() : '';
-      const events = Array.from(selectedNewsEvents).map(id => {
-        const e = NEWS_EVENTS.find(n => n.id === id);
-        return e ? e.label.replace(/^\S+\s/, '') : id;
-      });
-      if (custom) events.push(custom);
-      if (events.length === 0) return '';
-      return 'Upcoming high-impact news this week: ' + events.join(', ') + '.';
-    }
+function getNewsCtx() {
+  const custom = (document.getElementById('newsCustomInput') || {}).value || '';
+  const evts = [...selectedNews].map(id => { const e = NEWS_EVENTS.find(n => n.id === id); return e ? e.label.replace(/^\S+\s/, '') : id; });
+  if (custom.trim()) evts.push(custom.trim());
+  return evts.length ? 'Upcoming high-impact news: ' + evts.join(', ') + '.' : '';
+}
 
-    // Init news card
-    function initNewsCard() {
-      const row = document.getElementById('newsQuickRow');
-      row.innerHTML = '';
-      NEWS_EVENTS.forEach(ev => {
-        const tag = document.createElement('button');
-        tag.className = 'news-tag';
-        tag.textContent = ev.label;
-        tag.addEventListener('click', () => {
-          if (ev.id === 'none') {
-            selectedNewsEvents.clear();
-            selectedNewsEvents.add('none');
-          } else {
-            selectedNewsEvents.delete('none');
-            if (selectedNewsEvents.has(ev.id)) selectedNewsEvents.delete(ev.id);
-            else selectedNewsEvents.add(ev.id);
-          }
-          row.querySelectorAll('.news-tag').forEach((t, i) => {
-            t.className = 'news-tag' + (selectedNewsEvents.has(NEWS_EVENTS[i].id) ? ' selected' : '');
-          });
-          updateNewsSubtitle();
-        });
-        row.appendChild(tag);
-      });
+function parseGradeSignal(text) {
+  const u = text.toUpperCase();
+  let grade = 'C', signal = 'NO TRADE';
+  const gm = u.match(/GRADE[:\s]+([A-Z]+)/);
+  if (gm) {
+    if (gm[1].includes('REJECT')) grade = 'REJECT';
+    else if (gm[1].startsWith('A')) grade = 'A';
+    else if (gm[1].startsWith('B')) grade = 'B';
+    else if (gm[1].startsWith('D')) grade = 'D';
+    else grade = 'C';
+  }
+  if (grade === 'REJECT') signal = 'NO TRADE';
+  else if (u.includes('DEVELOPING')) { if (grade === 'C') grade = 'D'; signal = 'DEVELOPING'; }
+  else if (u.match(/\bLONG\b/)) signal = 'LONG';
+  else if (u.match(/\bSHORT\b/)) signal = 'SHORT';
+  return { grade, signal };
+}
 
-      document.getElementById('newsContextToggle').addEventListener('click', () => {
-        newsOpen = !newsOpen;
-        document.getElementById('newsContextBody').className = 'news-context-body' + (newsOpen ? ' open' : '');
-        document.getElementById('newsArrow').textContent = newsOpen ? '▲' : '▼';
-      });
-    }
+// ── AUTH ──
+let authMode = 'login';
+function switchTab(mode) {
+  authMode = mode;
+  document.getElementById('tabLogin').className = 'auth-tab' + (mode === 'login' ? ' active' : '');
+  document.getElementById('tabSignup').className = 'auth-tab' + (mode === 'signup' ? ' active' : '');
+  document.getElementById('authBtnText').textContent = mode === 'login' ? 'Log in' : 'Create account';
+  document.getElementById('authMsg').className = 'auth-msg';
+}
+async function handleAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPassword').value;
+  const msgEl = document.getElementById('authMsg');
+  const btn = document.getElementById('authBtn');
+  if (!email || !pass) { msgEl.textContent = 'Enter email and password.'; msgEl.className = 'auth-msg visible error'; return; }
+  btn.disabled = true; document.getElementById('authBtnText').textContent = authMode === 'login' ? 'Logging in...' : 'Creating account...';
+  const { data, error } = authMode === 'login'
+    ? await sb.auth.signInWithPassword({ email, password: pass })
+    : await sb.auth.signUp({ email, password: pass });
+  btn.disabled = false; document.getElementById('authBtnText').textContent = authMode === 'login' ? 'Log in' : 'Create account';
+  if (error) { msgEl.textContent = error.message; msgEl.className = 'auth-msg visible error'; return; }
+  if (authMode === 'signup' && !data.session) { msgEl.textContent = 'Check your email to confirm your account, then log in.'; msgEl.className = 'auth-msg visible success'; return; }
+  currentUser = data.user;
+  await loadDash();
+}
+document.getElementById('authEmail').addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
+document.getElementById('authPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
+async function signOut() { await sb.auth.signOut(); currentUser = null; currentSetupId = null; showScreen('screenAuth'); }
 
-    function updateNewsSubtitle() {
-      const sub = document.getElementById('newsSubtitle');
-      const count = selectedNewsEvents.size;
-      if (count === 0) { sub.textContent = 'Tap events so Claude factors them in'; return; }
-      const labels = Array.from(selectedNewsEvents).map(id => {
-        const e = NEWS_EVENTS.find(n => n.id === id);
-        return e ? e.label.replace(/^\S+\s/, '') : id;
-      });
-      sub.textContent = '✓ ' + labels.join(', ');
-    }
-
-    // ── Instruments ──
-    const grid = document.getElementById('instrumentGrid');
-    INSTRUMENTS.forEach(inst => {
-      const btn = document.createElement('button');
-      btn.className = 'inst-btn';
-      btn.innerHTML = `<i class="ti ${inst.icon}"></i>${inst.label}`;
-      btn.addEventListener('click', () => {
-        instrument = inst.id;
-        document.getElementById('customInstrument').value = '';
-        document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('selectedRow').textContent = inst.id + ' selected';
-        checkReady();
-      });
-      grid.appendChild(btn);
-    });
-    document.getElementById('customInstrument').addEventListener('input', function() {
-      document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
-      instrument = this.value.trim().toUpperCase();
-      document.getElementById('selectedRow').textContent = instrument ? instrument + ' (custom)' : '';
-      checkReady();
-    });
-
-    // ── News tags ──
-    document.querySelectorAll('#newsTags .tag').forEach(t => {
-      t.addEventListener('click', () => {
-        document.querySelectorAll('#newsTags .tag').forEach(x => x.classList.remove('selected'));
-        t.classList.add('selected');
-        newsCtx = t.dataset.val;
-      });
-    });
-
-    // ── Initial upload zones ──
-    const uploadGrid = document.getElementById('uploadGrid');
-    TF_SLOTS.forEach(slot => {
-      const zone = document.createElement('div');
-      zone.id = 'z_' + slot.key;
-      zone.className = 'upload-zone';
-      zone.setAttribute('role', 'button');
-      zone.setAttribute('tabindex', '0');
-      uploadGrid.appendChild(zone);
-      renderZone(slot, null);
-      const inp = document.getElementById(slot.fileId);
-      zone.addEventListener('click', () => inp.click());
-      zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
-      inp.addEventListener('change', function() {
-        const file = this.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async ev => {
-          const isHigherTF = slot.key === 'W' || slot.key === 'D';
-          const compressed = isHigherTF
-            ? await compressImage(ev.target.result, 900, 0.78)
-            : await compressImage(ev.target.result, 1400, 0.95);
-          uploads[slot.key] = compressed;
-          renderZone(slot, compressed);
-          checkReady();
-        };
-        reader.readAsDataURL(file);
-        this.value = '';
-      });
-    });
-
-    function renderZone(slot, url) {
-      const z = document.getElementById('z_' + slot.key);
-      if (url) {
-        z.className = 'upload-zone loaded';
-        z.innerHTML = `<img class="upload-thumb" src="${url}" /><div class="upload-check">✓ ${slot.label} loaded</div><div class="upload-replace">Tap to replace</div>`;
-      } else {
-        z.className = 'upload-zone';
-        z.innerHTML = `<i class="ti ti-photo"></i><div class="upload-label">${slot.label}</div><div class="upload-sub">${slot.sub}</div>`;
-      }
-    }
-
-    function checkReady() {
-      const allUploaded = TF_SLOTS.every(s => uploads[s.key]);
-      const btn = document.getElementById('analyzeBtn');
-      const txt = document.getElementById('analyzeBtnText');
-      if (instrument && allUploaded) {
-        btn.disabled = false; txt.textContent = 'Analyze ' + instrument;
-      } else if (!instrument) {
-        btn.disabled = true; txt.textContent = 'Select an instrument to begin';
-      } else {
-        btn.disabled = true;
-        const missing = TF_SLOTS.filter(s => !uploads[s.key]).map(s => s.label);
-        txt.textContent = 'Upload ' + missing.join(', ') + ' to continue';
-      }
-    }
-
-    // ── Disclaimer ──
-    document.getElementById('disclaimerToggle').addEventListener('click', () => {
-      disclaimerOpen = !disclaimerOpen;
-      document.getElementById('disclaimerContent').className = 'disclaimer-content' + (disclaimerOpen ? ' open' : '');
-      document.getElementById('disclaimerArrow').textContent = disclaimerOpen ? '▲ Hide' : '▼ Show';
-    });
-
-    // ── Image compression ──
-    function compressImage(dataUrl, maxWidth = 1200, quality = 0.92) {
-      return new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => {
-          const scale = Math.min(1, maxWidth / img.width);
-          const canvas = document.createElement('canvas');
-          canvas.width  = Math.round(img.width  * scale);
-          canvas.height = Math.round(img.height * scale);
-          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL('image/jpeg', quality));
-        };
-        img.src = dataUrl;
-      });
-    }
-
-    let updateImages = [];
-    let requiredSlots = [];
-
-    const SLOT_DEFINITIONS = {
-      'weekly': { key: 'weekly', label: 'Weekly Chart', sub: '2-3 years back', color: '#1E3A8A', bg: '#DBEAFE' },
-      'daily':  { key: 'daily',  label: 'Daily Chart',  sub: '6-12 months back', color: '#064E3B', bg: '#D1FAE5' },
-      '4h':     { key: '4h',     label: '4H Chart',     sub: '6-10 weeks back', color: '#78350F', bg: '#FEF3C7' },
-      '1h':     { key: '1h',     label: '1H Chart',     sub: 'Last 3-5 days', color: '#7F1D1D', bg: '#FEE2E2' },
-    };
-
-    function detectRequiredSlots(responseText) {
-      const markers = ['━━━ WHAT TO WATCH', 'WHAT TO WATCH', 'Still watching', 'Set alert at', 'When it hits'];
-      let startIdx = -1;
-      for (const marker of markers) {
-        const idx = responseText.indexOf(marker);
-        if (idx !== -1) { startIdx = idx; break; }
-      }
-      const scanSection = startIdx !== -1 ? responseText.substring(startIdx) : responseText;
-      const upper = scanSection.replace(/\*+/g, '').replace(/_+/g, '').toUpperCase();
-      const lines = upper.split('\n');
-      const relevantLines = new Set();
-      lines.forEach((line, i) => {
-        if (line.includes('SEND') || line.includes('SCREENSHOT') || line.includes('WHEN IT HITS')) {
-          for (let j = Math.max(0, i - 1); j <= Math.min(lines.length - 1, i + 1); j++) {
-            relevantLines.add(j);
-          }
-        }
-      });
-      const context = relevantLines.size > 0
-        ? Array.from(relevantLines).map(i => lines[i]).join('\n')
-        : upper;
-      const slots = [];
-      if (context.includes('WEEKLY')) slots.push('weekly');
-      if (context.includes('DAILY')) slots.push('daily');
-      if (context.match(/\b4H\b/) || context.includes('4-HOUR')) slots.push('4h');
-      if (context.match(/\b1H\b/) || context.includes('1-HOUR') || slots.length === 0) {
-        if (!slots.includes('1h')) slots.push('1h');
-      }
-      return slots.length > 0 ? slots : ['1h'];
-    }
-
-    function buildUploadZone(slotKeys) {
-      requiredSlots = slotKeys.map(k => SLOT_DEFINITIONS[k]);
-      updateImages = new Array(slotKeys.length).fill(null);
-      const container = document.getElementById('dynamicUploadZone');
-      container.innerHTML = '';
-      document.querySelectorAll('.dynamic-file-input').forEach(el => el.remove());
-
-      if (slotKeys.length === 1) {
-        const slot = requiredSlots[0];
-        const inp = createFileInput(slot.key, 0);
-        const zone = document.createElement('div');
-        zone.className = 'followup-upload-zone';
-        zone.id = 'dynZone_' + slot.key;
-        zone.setAttribute('role', 'button');
-        zone.setAttribute('tabindex', '0');
-        zone.innerHTML = `
-          <i class="ti ti-photo"></i>
-          <div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:${slot.bg};color:${slot.color};margin-bottom:2px;">${slot.label}</div>
-          <div class="followup-upload-sub">${slot.sub}</div>`;
-        zone.addEventListener('click', () => inp.click());
-        zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
-        container.appendChild(zone);
-      } else {
-        const grid = document.createElement('div');
-        grid.style.cssText = 'display:grid;grid-template-columns:repeat(' + slotKeys.length + ',1fr);gap:8px;';
-        requiredSlots.forEach((slot, i) => {
-          const inp = createFileInput(slot.key, i);
-          const zone = document.createElement('div');
-          zone.className = 'followup-upload-zone';
-          zone.id = 'dynZone_' + slot.key;
-          zone.setAttribute('role', 'button');
-          zone.setAttribute('tabindex', '0');
-          zone.style.minHeight = '90px';
-          zone.innerHTML = `
-            <i class="ti ti-photo" style="font-size:18px;"></i>
-            <div style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:${slot.bg};color:${slot.color};">${slot.label}</div>
-            <div style="font-size:9px;color:var(--text-tertiary);">${slot.sub}</div>`;
-          zone.addEventListener('click', () => inp.click());
-          zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
-          grid.appendChild(zone);
-        });
-        container.appendChild(grid);
-      }
-
-      const labels = requiredSlots.map(s => s.label).join(' + ');
-      document.getElementById('monitorTitle').textContent = 'Send update — ' + labels;
-      document.getElementById('monitorSub').textContent = requiredSlots.length > 1
-        ? 'Upload each chart screenshot below'
-        : 'Upload a fresh screenshot when price moves';
-      document.getElementById('updateBtn').disabled = true;
-      document.getElementById('updateBtnText').textContent = 'Upload screenshot' + (slotKeys.length > 1 ? 's' : '') + ' first';
-    }
-
-    function createFileInput(key, index) {
-      const inp = document.createElement('input');
-      inp.type = 'file';
-      inp.accept = 'image/*';
-      inp.className = 'dynamic-file-input';
-      inp.style.display = 'none';
-      inp.id = 'dynFile_' + key;
-      document.body.appendChild(inp);
-      inp.addEventListener('change', function() {
-        const file = this.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async ev => {
-          const compressed = await compressImage(ev.target.result, 1400, 0.95);
-          updateImages[index] = compressed;
-          const zone = document.getElementById('dynZone_' + key);
-          const slot = requiredSlots[index];
-          zone.className = 'followup-upload-zone loaded';
-          zone.innerHTML = `
-            <img style="width:100%;height:60px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${compressed}" />
-            <div style="font-size:10px;color:var(--green-text);margin-top:3px;">✓ ${slot.label}</div>
-            <div style="font-size:9px;color:var(--text-tertiary);">Tap to replace</div>`;
-          checkUpdateReady();
-        };
-        reader.readAsDataURL(file);
-        this.value = '';
-      });
-      return inp;
-    }
-
-    function checkUpdateReady() {
-      const allLoaded = updateImages.every(img => img !== null);
-      const btn = document.getElementById('updateBtn');
-      const txt = document.getElementById('updateBtnText');
-      const loaded = updateImages.filter(Boolean).length;
-      const total = requiredSlots.length;
-      if (allLoaded) {
-        btn.disabled = false;
-        txt.textContent = 'Send ' + requiredSlots.map(s => s.label).join(' + ');
-      } else {
-        btn.disabled = true;
-        txt.textContent = `Upload ${total - loaded} more screenshot${total - loaded > 1 ? 's' : ''} first`;
-      }
-    }
-
-    // ── Fresh chart zones ──
-    function setupFreshZone(zoneId, inputId, label, callback) {
-      const zone = document.getElementById(zoneId);
-      const inp = document.getElementById(inputId);
-      zone.addEventListener('click', () => inp.click());
-      zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
-      inp.addEventListener('change', async function() {
-        const file = this.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async ev => {
-          const compressed = await compressImage(ev.target.result);
-          callback(compressed);
-          zone.className = 'fresh-zone loaded';
-          zone.innerHTML = `<img style="width:100%;height:60px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${compressed}" /><div style="font-size:10px;color:#78350F;margin-top:4px;">✓ ${label}</div>`;
-          checkFreshReady();
-        };
-        reader.readAsDataURL(file);
-        this.value = '';
-      });
-    }
-
-    setupFreshZone('freshZoneD', 'fileFreshD', 'Daily loaded', val => { freshD = val; });
-    setupFreshZone('freshZone4h', 'fileFresh4h', '4H loaded', val => { fresh4h = val; });
-
-    function checkFreshReady() {
-      const btn = document.getElementById('freshSubmitBtn');
-      const txt = document.getElementById('freshSubmitText');
-      if (freshD && fresh4h) {
-        btn.disabled = false;
-        txt.textContent = 'Submit Fresh Charts';
-      } else {
-        btn.disabled = true;
-        txt.textContent = 'Upload both charts first';
-      }
-    }
-
-    // ── Main analysis ──
-    document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
-
-    async function runAnalysis() {
-      const notes = document.getElementById('contextNotes').value.trim();
-      setLoading(true, 'initial'); hideError();
-      document.getElementById('resultCard').className = 'result-card';
-
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'initial',
-            instrument,
-            news: newsCtx || 'not specified',
-            notes,
-            images: [uploads.W, uploads.D, uploads['4h'], uploads['1h']].map(toBase64),
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || data.message || `Server error ${res.status}`);
-
-        sessionContext = data.sessionContext || '';
-        conversationHistory = [];
-        showInitialResult(data.result);
-      } catch (err) { showError(err.message); }
-      finally { setLoading(false, 'initial'); }
-    }
-
-    // ── Send update ──
-    document.getElementById('updateBtn').addEventListener('click', sendUpdate);
-
-    async function sendUpdate() {
-      setLoading(true, 'update'); hideError();
-
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'followup',
-            instrument,
-            updateImage: toBase64(updateImages[0]),
-            updateImage2: updateImages[1] ? toBase64(updateImages[1]) : null,
-            sessionContext,
-            conversationHistory,
-            newsContext: getNewsContext(),
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Update failed');
-
-        if (data.sessionContext) sessionContext = data.sessionContext;
-
-        const imgCount = updateImages.length;
-        conversationHistory.push({ role: 'user', content: `[User sent ${imgCount} screenshot${imgCount > 1 ? 's' : ''}]` });
-        conversationHistory.push({ role: 'assistant', content: data.result });
-        if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-20);
-
-        addConvoEntry(data.result, 'update');
-
-        if (data.needsFreshCharts) {
-          document.getElementById('freshChartsCard').className = 'fresh-charts-card visible';
-          document.getElementById('freshChartsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        const detectedSlots = detectRequiredSlots(data.result);
-        buildUploadZone(detectedSlots);
-
-      } catch (err) { showError(err.message); }
-      finally { setLoading(false, 'update'); }
-    }
-
-    // ── Submit fresh charts ──
-    document.getElementById('freshSubmitBtn').addEventListener('click', sendFreshCharts);
-
-    async function sendFreshCharts() {
-      setLoading(true, 'update'); hideError();
-
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'followup',
-            instrument,
-            updateImage: toBase64(freshD),
-            updateImage2: toBase64(fresh4h),
-            sessionContext,
-            conversationHistory: [
-              ...conversationHistory,
-              { role: 'user', content: 'Here are fresh Daily and 4H charts. Please update your higher timeframe context.' }
-            ]
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed');
-
-        if (data.sessionContext) sessionContext = data.sessionContext;
-        conversationHistory.push({ role: 'user', content: 'Sent fresh Daily and 4H charts' });
-        conversationHistory.push({ role: 'assistant', content: data.result });
-
-        addConvoEntry(data.result, 'fresh-charts');
-        document.getElementById('freshChartsCard').className = 'fresh-charts-card';
-
-        freshD = null; fresh4h = null;
-        ['freshZoneD', 'freshZone4h'].forEach((id, i) => {
-          const labels = ['Daily Chart', '4H Chart'];
-          document.getElementById(id).className = 'fresh-zone';
-          document.getElementById(id).innerHTML = `<i class="ti ti-photo"></i><div class="fresh-zone-label">${labels[i]}</div>`;
-        });
-        checkFreshReady();
-
-      } catch (err) { showError(err.message); }
-      finally { setLoading(false, 'update'); }
-    }
-
-    function addConvoEntry(text, type) {
-      const history = document.getElementById('convoHistory');
-      const entry = document.createElement('div');
-      entry.className = 'convo-entry';
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const headerLabel = type === 'fresh-charts' ? '🔄 Structure Update' : '📊 1H Update';
-      entry.innerHTML = `
-        <div class="convo-entry-header ${type}">
-          ${headerLabel} <span style="opacity:0.6;font-weight:400;margin-left:auto;">${timeStr}</span>
+// ── DASHBOARD ──
+async function loadDash() {
+  showScreen('screenDash');
+  const { data: setups } = await sb.from('setups').select('*').order('updated_at', { ascending: false });
+  const container = document.getElementById('setupCards');
+  if (!setups || !setups.length) {
+    document.getElementById('dashTitle').textContent = 'Your Setups';
+    container.innerHTML = `<div class="empty-state"><i class="ti ti-chart-candle"></i><p>No setups yet. Start your first analysis.</p><button class="btn-primary" style="max-width:200px;margin:0 auto;" onclick="showNewAnalysis()"><i class="ti ti-plus"></i> New Analysis</button></div>`;
+    return;
+  }
+  document.getElementById('dashTitle').textContent = 'Your Setups (' + setups.length + ')';
+  container.innerHTML = setups.map(s => {
+    const g = s.grade || '?', sig = s.signal || '—';
+    const sigCls = sig === 'LONG' ? 'sig-long' : sig === 'SHORT' ? 'sig-short' : sig === 'DEVELOPING' ? 'sig-developing' : 'sig-none';
+    const dt = new Date(s.updated_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return `<div class="setup-card" onclick="loadSetup('${s.id}')">
+      <div class="setup-card-info">
+        <div class="setup-card-name">${s.instrument}</div>
+        <div class="setup-card-badges">
+          <span class="grade-badge grade-${g}" style="font-size:11px;padding:2px 10px;">Grade ${g}</span>
+          <span class="signal-pill ${sigCls}" style="font-size:11px;padding:2px 10px;">${sig}</span>
         </div>
-        <div class="convo-entry-body">${text}</div>`;
-      history.appendChild(entry);
-      entry.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+        <div class="setup-card-date">${dt}</div>
+      </div>
+      <i class="ti ti-chevron-right" style="color:var(--text-tertiary);font-size:18px;"></i>
+    </div>`;
+  }).join('');
+}
+function goToDash() { loadDash(); }
 
-    function setLoading(on, target) {
-      if (target === 'initial') {
-        document.getElementById('loadingBox').className = on ? 'loading visible' : 'loading';
-        document.getElementById('analyzeBtn').disabled = on;
-        document.getElementById('analyzeBtnText').textContent = on ? 'Analyzing...' : 'Analyze ' + instrument;
-        if (on) {
-          msgIdx = 0;
-          document.getElementById('loadingText').textContent = LOADING_MSGS[0];
-          msgTimer = setInterval(() => { msgIdx = (msgIdx + 1) % LOADING_MSGS.length; document.getElementById('loadingText').textContent = LOADING_MSGS[msgIdx]; }, 2000);
-        } else { clearInterval(msgTimer); }
-      } else {
-        const lb = document.getElementById('updateLoadingBox');
-        lb.style.display = on ? 'block' : 'none';
-        document.getElementById('updateBtn').disabled = on;
-        document.getElementById('freshSubmitBtn').disabled = on;
-      }
-    }
+// ── NEW ANALYSIS ──
+function showNewAnalysis() {
+  currentSetupId = null; instrument = ''; newsCtx = '';
+  uploads = { W: null, D: null, '4h': null, '1h': null };
+  freshD = null; fresh4h = null; sessionContext = ''; conversationHistory = [];
+  selectedNews.clear(); newsOpen = false; updateImages = [];
+  document.getElementById('analysisTitle').textContent = 'New Analysis';
+  document.getElementById('setupForm').style.display = '';
+  document.getElementById('resultCard').className = 'result-card';
+  document.getElementById('monitorSection').className = 'monitor-section';
+  document.getElementById('newsContextCard').style.display = 'none';
+  document.getElementById('convoHistory').innerHTML = '';
+  document.getElementById('freshChartsCard').className = 'fresh-charts-card';
+  document.getElementById('dynamicUploadZone').innerHTML = '';
+  document.getElementById('updateBtn').disabled = true;
+  document.getElementById('updateBtnText').textContent = 'Upload a screenshot first';
+  document.querySelectorAll('.dynamic-file-input').forEach(el => el.remove());
+  document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('customInstrument').value = '';
+  document.getElementById('selectedRow').textContent = '';
+  document.getElementById('contextNotes').value = '';
+  document.querySelectorAll('#newsTags .tag').forEach(t => t.classList.remove('selected'));
+  TF_SLOTS.forEach(s => renderZone(s, null));
+  hideErr(); checkReady();
+  showScreen('screenAnalysis');
+}
 
-    function showInitialResult(text) {
-      const upper = text.toUpperCase();
-      let grade = 'C', signal = 'NO TRADE';
-      const gm = upper.match(/GRADE[:\s]+([A-Z]+)/);
-      if (gm) {
-        if (gm[1].includes('REJECT')) grade = 'REJECT';
-        else if (gm[1].startsWith('A')) grade = 'A';
-        else if (gm[1].startsWith('B')) grade = 'B';
-        else if (gm[1].startsWith('D')) grade = 'D';
-        else grade = 'C';
-      }
-      if (grade === 'REJECT') { signal = 'NO TRADE'; }
-      else if (upper.includes('DEVELOPING SETUP') || upper.includes('DEVELOPING')) { grade = grade === 'C' ? 'D' : grade; signal = 'DEVELOPING'; }
-      else if (upper.match(/\bLONG\b/)) signal = 'LONG';
-      else if (upper.match(/\bSHORT\b/)) signal = 'SHORT';
+// ── LOAD EXISTING SETUP ──
+async function loadSetup(setupId) {
+  currentSetupId = setupId;
+  const { data: setup } = await sb.from('setups').select('*').eq('id', setupId).single();
+  const { data: msgs } = await sb.from('messages').select('*').eq('setup_id', setupId).order('created_at', { ascending: true });
+  instrument = setup.instrument;
+  sessionContext = setup.session_context || '';
+  document.getElementById('analysisTitle').textContent = setup.instrument;
+  document.getElementById('setupForm').style.display = 'none';
+  document.getElementById('newsContextCard').style.display = 'none';
+  document.getElementById('monitorSection').className = 'monitor-section visible';
+  document.getElementById('freshChartsCard').className = 'fresh-charts-card';
+  document.getElementById('dynamicUploadZone').innerHTML = '';
+  document.querySelectorAll('.dynamic-file-input').forEach(el => el.remove());
+  conversationHistory = [];
+  const convoEl = document.getElementById('convoHistory');
+  convoEl.innerHTML = '';
+  const initial = (msgs || []).find(m => m.message_type === 'initial' && m.role === 'assistant');
+  if (initial) renderResult(initial.content, setup);
+  const followups = (msgs || []).filter(m => m.message_type !== 'initial' && m.role === 'assistant');
+  followups.forEach(m => {
+    addConvoEntry(m.content, m.message_type || 'update', false);
+    conversationHistory.push({ role: 'user', content: '[Screenshot]' });
+    conversationHistory.push({ role: 'assistant', content: m.content });
+  });
+  buildUploadZone(['1h']);
+  showScreen('screenAnalysis');
+}
 
-      const sigCls = signal === 'LONG' ? 'sig-long' : signal === 'SHORT' ? 'sig-short' : signal === 'DEVELOPING' ? 'sig-developing' : 'sig-none';
+// ── INSTRUMENT GRID ──
+const igrid = document.getElementById('instrumentGrid');
+INSTRUMENTS.forEach(inst => {
+  const btn = document.createElement('button');
+  btn.className = 'inst-btn';
+  btn.innerHTML = `<i class="ti ${inst.icon}"></i>${inst.label}`;
+  btn.addEventListener('click', () => {
+    instrument = inst.id;
+    document.getElementById('customInstrument').value = '';
+    document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('selectedRow').textContent = inst.id + ' selected';
+    checkReady();
+  });
+  igrid.appendChild(btn);
+});
+document.getElementById('customInstrument').addEventListener('input', function() {
+  document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
+  instrument = this.value.trim().toUpperCase();
+  document.getElementById('selectedRow').textContent = instrument ? instrument + ' (custom)' : '';
+  checkReady();
+});
+document.querySelectorAll('#newsTags .tag').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('#newsTags .tag').forEach(x => x.classList.remove('selected'));
+    t.classList.add('selected'); newsCtx = t.dataset.val;
+  });
+});
 
-      document.getElementById('resultHeader').innerHTML = `<span class="grade-badge grade-${grade}">Grade ${grade}</span><span class="signal-pill ${sigCls}">${signal}</span><span style="font-size:12px;color:var(--text-tertiary);margin-left:4px;">${instrument}</span>`;
+// ── UPLOAD ZONES ──
+const ugrid = document.getElementById('uploadGrid');
+TF_SLOTS.forEach(slot => {
+  const zone = document.createElement('div');
+  zone.id = 'z_' + slot.key; zone.className = 'upload-zone';
+  zone.setAttribute('role', 'button'); zone.setAttribute('tabindex', '0');
+  ugrid.appendChild(zone); renderZone(slot, null);
+  const inp = document.getElementById(slot.fileId);
+  zone.addEventListener('click', () => inp.click());
+  zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
+  inp.addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const hi = slot.key === 'W' || slot.key === 'D';
+      const c = await compressImage(ev.target.result, hi ? 900 : 1400, hi ? 0.78 : 0.95);
+      uploads[slot.key] = c; renderZone(slot, c); checkReady();
+    };
+    reader.readAsDataURL(file); this.value = '';
+  });
+});
 
-      // Split out "Confirmation needed" line and display it as a highlighted box
-      const confMatch = text.match(/Confirmation needed[^:]*:?\s*([\s\S]+?)(?=\n\n|$)/i);
-      let bodyText = text;
-      let confHtml = '';
-      if (confMatch) {
-        bodyText = text.substring(0, confMatch.index).trim();
-        confHtml = `<div class="confirmation-box"><div class="confirmation-label">⚡ Confirmation needed</div>${confMatch[1].trim()}</div>`;
-      }
-      const safeBody = bodyText.replace(/&/g,'&amp;').replace(/[<]/g,'&lt;').replace(/[>]/g,'&gt;');
-      document.getElementById('resultBody').innerHTML = '<div class="result-body-text">' + safeBody + '</div>' + confHtml;
-      document.getElementById('resultCard').className = 'result-card visible';
+function renderZone(slot, url) {
+  const z = document.getElementById('z_' + slot.key);
+  if (url) {
+    z.className = 'upload-zone loaded';
+    z.innerHTML = `<img class="upload-thumb" src="${url}" /><div class="upload-check">✓ ${slot.label} loaded</div><div class="upload-replace">Tap to replace</div>`;
+  } else {
+    z.className = 'upload-zone';
+    z.innerHTML = `<i class="ti ti-photo"></i><div class="upload-label">${slot.label}</div><div class="upload-sub">${slot.sub}</div>`;
+  }
+}
 
-      document.getElementById('setupForm').style.display = 'none';
-      document.getElementById('monitorSection').className = 'monitor-section visible';
-      document.getElementById('newsContextCard').style.display = 'block';
-      initNewsCard();
+function checkReady() {
+  const all = TF_SLOTS.every(s => uploads[s.key]);
+  const btn = document.getElementById('analyzeBtn'), txt = document.getElementById('analyzeBtnText');
+  if (instrument && all) { btn.disabled = false; txt.textContent = 'Analyze ' + instrument; }
+  else if (!instrument) { btn.disabled = true; txt.textContent = 'Select an instrument to begin'; }
+  else { btn.disabled = true; const miss = TF_SLOTS.filter(s => !uploads[s.key]).map(s => s.label); txt.textContent = 'Upload ' + miss.join(', ') + ' to continue'; }
+}
 
-      buildUploadZone(['1h']);
+document.getElementById('disclaimerToggle').addEventListener('click', () => {
+  disclaimerOpen = !disclaimerOpen;
+  document.getElementById('disclaimerContent').className = 'disclaimer-content' + (disclaimerOpen ? ' open' : '');
+  document.getElementById('disclaimerArrow').textContent = disclaimerOpen ? '▲ Hide' : '▼ Show';
+});
 
-      document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+function compressImage(dataUrl, maxWidth = 1200, quality = 0.92) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
 
-    function showError(msg) { const b = document.getElementById('errorBox'); b.textContent = '⚠ ' + msg; b.className = 'error-box visible'; }
-    function hideError() { document.getElementById('errorBox').className = 'error-box'; }
-
-    document.getElementById('newAnalysisBtn').addEventListener('click', () => {
-      uploads = { W: null, D: null, '4h': null, '1h': null };
-      TF_SLOTS.forEach(s => renderZone(s, null));
-      sessionContext = ''; conversationHistory = [];
-      updateImages = []; freshD = null; fresh4h = null;
-      document.querySelectorAll('.dynamic-file-input').forEach(el => el.remove());
-      document.getElementById('resultCard').className = 'result-card';
-      document.getElementById('monitorSection').className = 'monitor-section';
-      document.getElementById('newsContextCard').style.display = 'none';
-      selectedNewsEvents.clear(); newsOpen = false;
-      document.getElementById('setupForm').style.display = '';
-      document.getElementById('convoHistory').innerHTML = '';
-      document.getElementById('freshChartsCard').className = 'fresh-charts-card';
-      document.getElementById('dynamicUploadZone').innerHTML = '';
-      document.getElementById('updateBtn').disabled = true;
-      document.getElementById('updateBtnText').textContent = 'Upload a screenshot first';
-      hideError();
-      checkReady();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+// ── DYNAMIC UPLOAD ZONE ──
+function buildUploadZone(slotKeys) {
+  requiredSlots = slotKeys.map(k => ({ key: k, ...SLOT_DEFS[k] }));
+  updateImages = new Array(slotKeys.length).fill(null);
+  const container = document.getElementById('dynamicUploadZone');
+  container.innerHTML = '';
+  document.querySelectorAll('.dynamic-file-input').forEach(el => el.remove());
+  if (slotKeys.length === 1) {
+    const slot = requiredSlots[0];
+    const inp = makeDynInput(slot.key, 0);
+    const zone = document.createElement('div');
+    zone.className = 'followup-upload-zone'; zone.id = 'dynZone_' + slot.key;
+    zone.setAttribute('role', 'button'); zone.setAttribute('tabindex', '0');
+    zone.innerHTML = `<i class="ti ti-photo"></i><div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:${slot.bg};color:${slot.color};margin-bottom:2px;">${slot.label}</div><div class="followup-upload-sub">${slot.sub}</div>`;
+    zone.addEventListener('click', () => inp.click());
+    zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
+    container.appendChild(zone);
+  } else {
+    const g = document.createElement('div');
+    g.style.cssText = 'display:grid;grid-template-columns:repeat(' + slotKeys.length + ',1fr);gap:8px;';
+    requiredSlots.forEach((slot, i) => {
+      const inp = makeDynInput(slot.key, i);
+      const zone = document.createElement('div');
+      zone.className = 'followup-upload-zone'; zone.id = 'dynZone_' + slot.key;
+      zone.setAttribute('role', 'button'); zone.setAttribute('tabindex', '0');
+      zone.style.minHeight = '90px';
+      zone.innerHTML = `<i class="ti ti-photo" style="font-size:18px;"></i><div style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:${slot.bg};color:${slot.color};">${slot.label}</div><div style="font-size:9px;color:var(--text-tertiary);">${slot.sub}</div>`;
+      zone.addEventListener('click', () => inp.click());
+      zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
+      g.appendChild(zone);
     });
-  </script>
+    container.appendChild(g);
+  }
+  document.getElementById('monitorTitle').textContent = 'Send update — ' + requiredSlots.map(s => s.label).join(' + ');
+  document.getElementById('monitorSub').textContent = requiredSlots.length > 1 ? 'Upload each chart screenshot below' : 'Upload a fresh screenshot when price moves';
+  document.getElementById('updateBtn').disabled = true;
+  document.getElementById('updateBtnText').textContent = 'Upload screenshot' + (slotKeys.length > 1 ? 's' : '') + ' first';
+}
+
+function makeDynInput(key, index) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*'; inp.className = 'dynamic-file-input'; inp.style.display = 'none'; inp.id = 'dynFile_' + key;
+  document.body.appendChild(inp);
+  inp.addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const compressed = await compressImage(ev.target.result, 1400, 0.95);
+      updateImages[index] = compressed;
+      const zone = document.getElementById('dynZone_' + key);
+      const slot = requiredSlots[index];
+      zone.className = 'followup-upload-zone loaded';
+      zone.innerHTML = `<img style="width:100%;height:60px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${compressed}" /><div style="font-size:10px;color:var(--green-text);margin-top:3px;">✓ ${slot.label}</div><div style="font-size:9px;color:var(--text-tertiary);">Tap to replace</div>`;
+      checkUpdateReady();
+    };
+    reader.readAsDataURL(file); this.value = '';
+  });
+  return inp;
+}
+
+function checkUpdateReady() {
+  const all = updateImages.every(i => i !== null);
+  const loaded = updateImages.filter(Boolean).length, total = requiredSlots.length;
+  const btn = document.getElementById('updateBtn'), txt = document.getElementById('updateBtnText');
+  if (all) { btn.disabled = false; txt.textContent = 'Send ' + requiredSlots.map(s => s.label).join(' + '); }
+  else { btn.disabled = true; txt.textContent = `Upload ${total - loaded} more screenshot${total - loaded > 1 ? 's' : ''} first`; }
+}
+
+function detectSlots(text) {
+  const markers = ['WHAT TO WATCH','Still watching','Set alert','When it hits','Next update'];
+  let si = -1;
+  for (const m of markers) { const idx = text.indexOf(m); if (idx !== -1) { si = idx; break; } }
+  const scan = si !== -1 ? text.substring(si) : text;
+  const upper = scan.replace(/\*+/g, '').replace(/_+/g, '').toUpperCase();
+  const lines = upper.split('\n');
+  const rel = new Set();
+  lines.forEach((l, i) => { if (l.includes('SEND') || l.includes('SCREENSHOT') || l.includes('WHEN IT HITS')) { for (let j = Math.max(0,i-1); j <= Math.min(lines.length-1,i+1); j++) rel.add(j); } });
+  const ctx = rel.size > 0 ? [...rel].map(i => lines[i]).join('\n') : upper;
+  const slots = [];
+  if (ctx.includes('WEEKLY')) slots.push('weekly');
+  if (ctx.includes('DAILY')) slots.push('daily');
+  if (ctx.match(/\b4H\b/) || ctx.includes('4-HOUR')) slots.push('4h');
+  if (ctx.match(/\b1H\b/) || ctx.includes('1-HOUR') || slots.length === 0) { if (!slots.includes('1h')) slots.push('1h'); }
+  return slots.length ? slots : ['1h'];
+}
+
+// ── FRESH ZONES ──
+function setupFresh(zoneId, inputId, label, cb) {
+  const zone = document.getElementById(zoneId), inp = document.getElementById(inputId);
+  zone.addEventListener('click', () => inp.click());
+  zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') inp.click(); });
+  inp.addEventListener('change', async function() {
+    const file = this.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const c = await compressImage(ev.target.result);
+      cb(c); zone.className = 'fresh-zone loaded';
+      zone.innerHTML = `<img style="width:100%;height:60px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${c}" /><div style="font-size:10px;color:#78350F;margin-top:4px;">✓ ${label}</div>`;
+      checkFresh();
+    };
+    reader.readAsDataURL(file); this.value = '';
+  });
+}
+setupFresh('freshZoneD', 'fileFreshD', 'Daily loaded', v => { freshD = v; });
+setupFresh('freshZone4h', 'fileFresh4h', '4H loaded', v => { fresh4h = v; });
+function checkFresh() {
+  const btn = document.getElementById('freshSubmitBtn'), txt = document.getElementById('freshSubmitText');
+  if (freshD && fresh4h) { btn.disabled = false; txt.textContent = 'Submit Fresh Charts'; }
+  else { btn.disabled = true; txt.textContent = 'Upload both charts first'; }
+}
+
+// ── NEWS CARD ──
+function initNewsCard() {
+  const row = document.getElementById('newsQuickRow');
+  row.innerHTML = ''; selectedNews.clear(); newsOpen = false;
+  document.getElementById('newsContextBody').className = 'news-context-body';
+  document.getElementById('newsArrow').textContent = '▼';
+  NEWS_EVENTS.forEach(ev => {
+    const tag = document.createElement('button');
+    tag.className = 'news-tag'; tag.textContent = ev.label;
+    tag.addEventListener('click', () => {
+      if (ev.id === 'none') { selectedNews.clear(); selectedNews.add('none'); }
+      else { selectedNews.delete('none'); selectedNews.has(ev.id) ? selectedNews.delete(ev.id) : selectedNews.add(ev.id); }
+      row.querySelectorAll('.news-tag').forEach((t, i) => { t.className = 'news-tag' + (selectedNews.has(NEWS_EVENTS[i].id) ? ' selected' : ''); });
+      const sub = document.getElementById('newsSubtitle');
+      const lbls = [...selectedNews].map(id => { const e = NEWS_EVENTS.find(n => n.id === id); return e ? e.label.replace(/^\S+\s/, '') : id; });
+      sub.textContent = selectedNews.size ? '✓ ' + lbls.join(', ') : 'Tap events so Claude factors them in';
+    });
+    row.appendChild(tag);
+  });
+  document.getElementById('newsContextToggle').onclick = () => {
+    newsOpen = !newsOpen;
+    document.getElementById('newsContextBody').className = 'news-context-body' + (newsOpen ? ' open' : '');
+    document.getElementById('newsArrow').textContent = newsOpen ? '▲' : '▼';
+  };
+}
+
+// ── MAIN ANALYSIS ──
+document.getElementById('analyzeBtn').addEventListener('click', async () => {
+  const notes = document.getElementById('contextNotes').value.trim();
+  setLoading(true, 'initial'); hideErr();
+  document.getElementById('resultCard').className = 'result-card';
+  try {
+    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'initial', instrument, news: newsCtx || 'not specified', notes, images: [uploads.W, uploads.D, uploads['4h'], uploads['1h']].map(toBase64) }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+    sessionContext = data.sessionContext || ''; conversationHistory = [];
+    const { grade, signal } = parseGradeSignal(data.result);
+    const { data: setup, error } = await sb.from('setups').insert({ user_id: currentUser.id, instrument, grade, signal, initial_result: data.result, session_context: sessionContext }).select().single();
+    if (!error) {
+      currentSetupId = setup.id;
+      await sb.from('messages').insert({ setup_id: setup.id, user_id: currentUser.id, role: 'assistant', content: data.result, message_type: 'initial' });
+    }
+    renderResult(data.result, { grade, signal, instrument });
+    document.getElementById('setupForm').style.display = 'none';
+    document.getElementById('monitorSection').className = 'monitor-section visible';
+    document.getElementById('newsContextCard').style.display = 'block';
+    document.getElementById('analysisTitle').textContent = instrument;
+    initNewsCard(); buildUploadZone(['1h']);
+    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) { showErr(err.message); }
+  finally { setLoading(false, 'initial'); }
+});
+
+// ── SEND UPDATE ──
+document.getElementById('updateBtn').addEventListener('click', async () => {
+  setLoading(true, 'update'); hideErr();
+  try {
+    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'followup', instrument, updateImage: toBase64(updateImages[0]), updateImage2: updateImages[1] ? toBase64(updateImages[1]) : null, sessionContext, conversationHistory, newsContext: getNewsCtx() }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Update failed');
+    if (data.sessionContext) sessionContext = data.sessionContext;
+    conversationHistory.push({ role: 'user', content: '[Screenshot update]' });
+    conversationHistory.push({ role: 'assistant', content: data.result });
+    if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-20);
+    if (currentSetupId) {
+      await sb.from('messages').insert({ setup_id: currentSetupId, user_id: currentUser.id, role: 'assistant', content: data.result, message_type: 'update' });
+      await sb.from('setups').update({ session_context: sessionContext, updated_at: new Date().toISOString() }).eq('id', currentSetupId);
+    }
+    addConvoEntry(data.result, 'update');
+    if (data.needsFreshCharts) { document.getElementById('freshChartsCard').className = 'fresh-charts-card visible'; document.getElementById('freshChartsCard').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    buildUploadZone(detectSlots(data.result));
+  } catch (err) { showErr(err.message); }
+  finally { setLoading(false, 'update'); }
+});
+
+// ── FRESH CHARTS ──
+document.getElementById('freshSubmitBtn').addEventListener('click', async () => {
+  setLoading(true, 'update'); hideErr();
+  try {
+    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'followup', instrument, updateImage: toBase64(freshD), updateImage2: toBase64(fresh4h), sessionContext, conversationHistory: [...conversationHistory, { role: 'user', content: 'Here are fresh Daily and 4H charts. Please update your higher timeframe context.' }] }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    if (data.sessionContext) sessionContext = data.sessionContext;
+    conversationHistory.push({ role: 'user', content: 'Sent fresh Daily and 4H charts' });
+    conversationHistory.push({ role: 'assistant', content: data.result });
+    if (currentSetupId) {
+      await sb.from('messages').insert({ setup_id: currentSetupId, user_id: currentUser.id, role: 'assistant', content: data.result, message_type: 'fresh-charts' });
+      await sb.from('setups').update({ session_context: sessionContext, updated_at: new Date().toISOString() }).eq('id', currentSetupId);
+    }
+    addConvoEntry(data.result, 'fresh-charts');
+    document.getElementById('freshChartsCard').className = 'fresh-charts-card';
+    freshD = null; fresh4h = null;
+    ['freshZoneD','freshZone4h'].forEach((id,i) => {
+      document.getElementById(id).className = 'fresh-zone';
+      document.getElementById(id).innerHTML = `<i class="ti ti-photo"></i><div class="fresh-zone-label">${['Daily Chart','4H Chart'][i]}</div>`;
+    });
+    checkFresh();
+  } catch (err) { showErr(err.message); }
+  finally { setLoading(false, 'update'); }
+});
+
+document.getElementById('backToDashBtn').addEventListener('click', goToDash);
+
+// ── RENDER ──
+function renderResult(text, setup) {
+  const g = setup.grade || 'C', sig = setup.signal || 'NO TRADE';
+  const sigCls = sig === 'LONG' ? 'sig-long' : sig === 'SHORT' ? 'sig-short' : sig === 'DEVELOPING' ? 'sig-developing' : 'sig-none';
+  document.getElementById('resultHeader').innerHTML = `<span class="grade-badge grade-${g}">Grade ${g}</span><span class="signal-pill ${sigCls}">${sig}</span><span style="font-size:12px;color:var(--text-tertiary);margin-left:4px;">${setup.instrument || instrument}</span>`;
+  const confMatch = text.match(/Confirmation needed[^:]*:?\s*([\s\S]+?)(?=\n\n|$)/i);
+  let body = text, confHtml = '';
+  if (confMatch) { body = text.substring(0, confMatch.index).trim(); confHtml = `<div class="confirmation-box"><div class="confirmation-label">⚡ Confirmation needed</div>${confMatch[1].trim()}</div>`; }
+  const safe = body.replace(/&/g, '&amp;').replace(/[<]/g, '&lt;').replace(/[>]/g, '&gt;');
+  document.getElementById('resultBody').innerHTML = '<div class="result-body-text">' + safe + '</div>' + confHtml;
+  document.getElementById('resultCard').className = 'result-card visible';
+}
+
+function addConvoEntry(text, type, scroll = true) {
+  const el = document.getElementById('convoHistory');
+  const div = document.createElement('div'); div.className = 'convo-entry';
+  const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const lbl = type === 'fresh-charts' ? '🔄 Structure Update' : '📊 1H Update';
+  div.innerHTML = `<div class="convo-entry-header ${type}">${lbl} <span style="opacity:0.6;font-weight:400;margin-left:auto;">${t}</span></div><div class="convo-entry-body">${text}</div>`;
+  el.appendChild(div);
+  if (scroll) div.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function setLoading(on, target) {
+  if (target === 'initial') {
+    document.getElementById('loadingBox').className = on ? 'loading visible' : 'loading';
+    document.getElementById('analyzeBtn').disabled = on;
+    document.getElementById('analyzeBtnText').textContent = on ? 'Analyzing...' : 'Analyze ' + instrument;
+    if (on) { msgIdx = 0; document.getElementById('loadingText').textContent = LOADING_MSGS[0]; msgTimer = setInterval(() => { msgIdx = (msgIdx+1) % LOADING_MSGS.length; document.getElementById('loadingText').textContent = LOADING_MSGS[msgIdx]; }, 2000); }
+    else clearInterval(msgTimer);
+  } else {
+    document.getElementById('updateLoadingBox').style.display = on ? 'block' : 'none';
+    document.getElementById('updateBtn').disabled = on;
+    document.getElementById('freshSubmitBtn').disabled = on;
+  }
+}
+
+// ── BOOT ──
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { currentUser = session.user; await loadDash(); }
+  else showScreen('screenAuth');
+})();
+</script>
 </body>
 </html>
