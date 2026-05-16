@@ -382,7 +382,7 @@
           const isHigherTF = slot.key === 'W' || slot.key === 'D';
           const compressed = isHigherTF
             ? await compressImage(ev.target.result, 900, 0.78)
-            : await compressImage(ev.target.result, 1200, 0.92);
+            : await compressImage(ev.target.result, 1400, 0.95);
           uploads[slot.key] = compressed;
           renderZone(slot, compressed);
           checkReady();
@@ -567,7 +567,7 @@
         const file = this.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = async ev => {
-          const compressed = await compressImage(ev.target.result);
+          const compressed = await compressImage(ev.target.result, 1400, 0.95);
           updateImages[index] = compressed;
           const zone = document.getElementById('dynZone_' + key);
           const slot = requiredSlots[index];
