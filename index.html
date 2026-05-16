@@ -144,6 +144,17 @@
     .btn-fresh-submit:disabled { background: var(--border); color: var(--text-tertiary); cursor: not-allowed; }
 
     .footer { margin-top: 32px; padding: 12px; font-size: 11px; color: var(--text-tertiary); text-align: center; line-height: 1.6; border-top: 1px solid var(--border); }
+
+    /* ── News context card ── */
+    .news-context-card { background: var(--bg-card); border: 1.5px solid #F59E0B; border-radius: var(--radius); overflow: hidden; margin-top: 12px; box-shadow: var(--shadow); }
+    .news-context-header { padding: 12px 14px; background: #FFFBEB; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+    .news-arrow { font-size: 11px; color: #92400E; font-weight: 500; }
+    .news-context-body { padding: 14px; border-top: 1px solid #FCD34D; display: none; }
+    .news-context-body.open { display: block; }
+    .news-quick-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .news-tag { font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 20px; border: 1.5px solid #FCD34D; background: #FFFBEB; color: #92400E; cursor: pointer; transition: all 0.15s; }
+    .news-tag:hover { border-color: #F59E0B; background: #FEF3C7; }
+    .news-tag.selected { background: #F59E0B; border-color: #D97706; color: white; }
   </style>
 </head>
 <body>
@@ -233,6 +244,25 @@
     <div class="result-card" id="resultCard">
       <div class="result-header" id="resultHeader"></div>
       <div class="result-body" id="resultBody"></div>
+    </div>
+
+    <!-- News context card — shown after initial analysis -->
+    <div class="news-context-card" id="newsContextCard" style="display:none;">
+      <div class="news-context-header" id="newsContextToggle">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:15px;">📰</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#78350F;">Any high-impact news this week?</div>
+            <div style="font-size:11px;color:#92400E;" id="newsSubtitle">Tap events so Claude factors them in</div>
+          </div>
+        </div>
+        <span class="news-arrow" id="newsArrow">▼</span>
+      </div>
+      <div class="news-context-body" id="newsContextBody">
+        <div class="news-quick-row" id="newsQuickRow"></div>
+        <input type="text" class="custom-input" id="newsCustomInput" placeholder="Or type custom: 'BOC Thursday 2pm', 'earnings Friday'..." style="margin-top:10px;font-size:12px;border-color:#FCD34D;" />
+        <div style="font-size:11px;color:#92400E;margin-top:6px;">Claude will factor these into every follow-up analysis automatically.</div>
+      </div>
     </div>
 
     <!-- Monitoring section — shown after initial analysis -->
@@ -329,10 +359,80 @@
     let conversationHistory = [];
     let disclaimerOpen = false;
     let msgTimer = null, msgIdx = 0;
+    let selectedNewsEvents = new Set();
+    let newsOpen = false;
+
+    const NEWS_EVENTS = [
+      { id: 'none', label: '🟢 None this week' },
+      { id: 'fomc', label: '🔴 FOMC' },
+      { id: 'nfp', label: '🔴 NFP' },
+      { id: 'cpi', label: '🔴 CPI' },
+      { id: 'gdp', label: '🔴 GDP' },
+      { id: 'boe', label: '🔴 BOE' },
+      { id: 'ecb', label: '🔴 ECB' },
+      { id: 'boj', label: '🔴 BOJ' },
+      { id: 'pmi', label: '🟡 PMI' },
+      { id: 'retail', label: '🟡 Retail Sales' },
+    ];
 
     // Helper: strip data URL prefix to get raw base64
     function toBase64(dataUrl) {
       return dataUrl.split(',')[1];
+    }
+
+    // Build news context string for API calls
+    function getNewsContext() {
+      const custom = document.getElementById('newsCustomInput') ? document.getElementById('newsCustomInput').value.trim() : '';
+      const events = Array.from(selectedNewsEvents).map(id => {
+        const e = NEWS_EVENTS.find(n => n.id === id);
+        return e ? e.label.replace(/^[^\s]+\s/, '') : id;
+      });
+      if (custom) events.push(custom);
+      if (events.length === 0) return '';
+      return 'Upcoming high-impact news this week: ' + events.join(', ') + '.';
+    }
+
+    // Init news card
+    function initNewsCard() {
+      const row = document.getElementById('newsQuickRow');
+      row.innerHTML = '';
+      NEWS_EVENTS.forEach(ev => {
+        const tag = document.createElement('button');
+        tag.className = 'news-tag';
+        tag.textContent = ev.label;
+        tag.addEventListener('click', () => {
+          if (ev.id === 'none') {
+            selectedNewsEvents.clear();
+            selectedNewsEvents.add('none');
+          } else {
+            selectedNewsEvents.delete('none');
+            if (selectedNewsEvents.has(ev.id)) selectedNewsEvents.delete(ev.id);
+            else selectedNewsEvents.add(ev.id);
+          }
+          row.querySelectorAll('.news-tag').forEach((t, i) => {
+            t.className = 'news-tag' + (selectedNewsEvents.has(NEWS_EVENTS[i].id) ? ' selected' : '');
+          });
+          updateNewsSubtitle();
+        });
+        row.appendChild(tag);
+      });
+
+      document.getElementById('newsContextToggle').addEventListener('click', () => {
+        newsOpen = !newsOpen;
+        document.getElementById('newsContextBody').className = 'news-context-body' + (newsOpen ? ' open' : '');
+        document.getElementById('newsArrow').textContent = newsOpen ? '▲' : '▼';
+      });
+    }
+
+    function updateNewsSubtitle() {
+      const sub = document.getElementById('newsSubtitle');
+      const count = selectedNewsEvents.size;
+      if (count === 0) { sub.textContent = 'Tap events so Claude factors them in'; return; }
+      const labels = Array.from(selectedNewsEvents).map(id => {
+        const e = NEWS_EVENTS.find(n => n.id === id);
+        return e ? e.label.replace(/^[^\s]+\s/, '') : id;
+      });
+      sub.textContent = '✓ ' + labels.join(', ');
     }
 
     // ── Instruments ──
@@ -665,6 +765,7 @@
             updateImage2: updateImages[1] ? toBase64(updateImages[1]) : null,
             sessionContext,
             conversationHistory,
+            newsContext: getNewsContext(),
           }),
         });
         const data = await res.json();
@@ -792,6 +893,8 @@
 
       document.getElementById('setupForm').style.display = 'none';
       document.getElementById('monitorSection').className = 'monitor-section visible';
+      document.getElementById('newsContextCard').style.display = 'block';
+      initNewsCard();
 
       const detectedSlots = detectRequiredSlots(text);
       buildUploadZone(detectedSlots);
@@ -810,6 +913,8 @@
       document.querySelectorAll('.dynamic-file-input').forEach(el => el.remove());
       document.getElementById('resultCard').className = 'result-card';
       document.getElementById('monitorSection').className = 'monitor-section';
+      document.getElementById('newsContextCard').style.display = 'none';
+      selectedNewsEvents.clear(); newsOpen = false;
       document.getElementById('setupForm').style.display = '';
       document.getElementById('convoHistory').innerHTML = '';
       document.getElementById('freshChartsCard').className = 'fresh-charts-card';
