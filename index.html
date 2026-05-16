@@ -388,7 +388,7 @@
       const custom = document.getElementById('newsCustomInput') ? document.getElementById('newsCustomInput').value.trim() : '';
       const events = Array.from(selectedNewsEvents).map(id => {
         const e = NEWS_EVENTS.find(n => n.id === id);
-        return e ? e.label.replace(/^[^\s]+\s/, '') : id;
+        return e ? e.label.replace(/^\S+\s/, '') : id;
       });
       if (custom) events.push(custom);
       if (events.length === 0) return '';
@@ -433,7 +433,7 @@
       if (count === 0) { sub.textContent = 'Tap events so Claude factors them in'; return; }
       const labels = Array.from(selectedNewsEvents).map(id => {
         const e = NEWS_EVENTS.find(n => n.id === id);
-        return e ? e.label.replace(/^[^\s]+\s/, '') : id;
+        return e ? e.label.replace(/^\S+\s/, '') : id;
       });
       sub.textContent = '✓ ' + labels.join(', ');
     }
@@ -893,15 +893,15 @@
       document.getElementById('resultHeader').innerHTML = `<span class="grade-badge grade-${grade}">Grade ${grade}</span><span class="signal-pill ${sigCls}">${signal}</span><span style="font-size:12px;color:var(--text-tertiary);margin-left:4px;">${instrument}</span>`;
 
       // Split out "Confirmation needed" line and display it as a highlighted box
-      const confMatch = text.match(/Confirmation needed[:\s]+(.+?)(?:
-|$)/is);
+      const confMatch = text.match(/Confirmation needed[^:]*:?\s*([\s\S]+?)(?=\n\n|$)/i);
       let bodyText = text;
       let confHtml = '';
       if (confMatch) {
         bodyText = text.substring(0, confMatch.index).trim();
         confHtml = `<div class="confirmation-box"><div class="confirmation-label">⚡ Confirmation needed</div>${confMatch[1].trim()}</div>`;
       }
-      document.getElementById('resultBody').innerHTML = `<div class="result-body-text">${bodyText.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>${confHtml}`;
+      const safeBody = bodyText.replace(/&/g,'&amp;').replace(/[<]/g,'&lt;').replace(/[>]/g,'&gt;');
+      document.getElementById('resultBody').innerHTML = '<div class="result-body-text">' + safeBody + '</div>' + confHtml;
       document.getElementById('resultCard').className = 'result-card visible';
 
       document.getElementById('setupForm').style.display = 'none';
