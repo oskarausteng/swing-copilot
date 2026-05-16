@@ -651,7 +651,7 @@
       document.getElementById('resultCard').className = 'result-card';
 
       try {
-        const res = await fetch('/.netlify/functions/analyze', {
+        const res = await fetch('https://swing-copilot-api-production.up.railway.app/analyze', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: 'initial', instrument, news: newsCtx || 'not specified', notes, images: [uploads.W, uploads.D, uploads['4h'], uploads['1h']] }),
         });
@@ -673,7 +673,7 @@
       setLoading(true, 'update'); hideError();
 
       try {
-        const res = await fetch('/.netlify/functions/analyze', {
+        const res = await fetch('https://swing-copilot-api-production.up.railway.app/analyze', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             type: 'followup',
@@ -718,7 +718,7 @@
       try {
         // Send fresh daily + 4H as a context update
         const freshMsg = '[User sent fresh Daily and 4H charts to update structure context]';
-        const res = await fetch('/.netlify/functions/analyze', {
+        const res = await fetch('https://swing-copilot-api-production.up.railway.app/analyze', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             type: 'followup',
