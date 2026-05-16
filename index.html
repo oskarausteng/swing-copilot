@@ -177,6 +177,30 @@
     .result-body-text { white-space: pre-wrap; }
     .conf-box { margin-top: 12px; padding: 10px 14px; background: rgba(239,159,39,0.08); border: 0.5px solid rgba(239,159,39,0.25); border-radius: var(--radius-sm); font-size: 12px; color: rgba(239,159,39,0.8); line-height: 1.6; }
     .conf-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--amber); margin-bottom: 4px; }
+    .levels-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 14px 16px; border-bottom: 0.5px solid var(--border); }
+    .level-item { display: flex; flex-direction: column; gap: 3px; }
+    .level-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-3); }
+    .level-val { font-size: 15px; font-weight: 700; color: var(--text-1); }
+    .level-sub { font-size: 11px; color: var(--text-3); }
+    .action-box { margin: 0; padding: 14px 16px; background: rgba(29,158,117,0.07); border-bottom: 0.5px solid rgba(29,158,117,0.2); }
+    .action-box-short { background: rgba(226,75,74,0.07); border-bottom-color: rgba(226,75,74,0.2); }
+    .action-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--green-text); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .action-label-short { color: var(--red-text); }
+    .action-text { font-size: 13px; font-weight: 600; color: var(--text-1); line-height: 1.5; }
+    .next-update-box { padding: 10px 16px; background: rgba(255,255,255,0.03); border-bottom: 0.5px solid var(--border); display: flex; align-items: flex-start; gap: 10px; }
+    .next-update-icon { color: var(--text-3); font-size: 15px; margin-top: 1px; flex-shrink: 0; }
+    .next-update-text { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+    .next-update-val { font-weight: 700; color: var(--text-1); }
+    .analysis-toggle { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+    .analysis-toggle-label { font-size: 11px; font-weight: 600; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+    .analysis-toggle-arrow { font-size: 11px; color: var(--text-4); }
+    .analysis-detail { display: none; padding: 0 16px 14px; font-size: 12px; color: var(--text-2); line-height: 1.8; white-space: pre-wrap; border-top: 0.5px solid var(--border); padding-top: 12px; }
+    .analysis-detail.open { display: block; }
+    .rr-pill { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .rr-excellent { background: rgba(29,158,117,0.15); color: var(--green-text); border: 0.5px solid rgba(29,158,117,0.3); }
+    .rr-good { background: rgba(55,138,221,0.12); color: #85B7EB; border: 0.5px solid rgba(55,138,221,0.25); }
+    .rr-marginal { background: var(--amber-dim); color: var(--amber-text); border: 0.5px solid rgba(239,159,39,0.3); }
+    .rr-poor { background: var(--red-dim); color: var(--red-text); border: 0.5px solid rgba(226,75,74,0.25); }
     .loading { display: none; text-align: center; padding: 28px; }
     .loading.visible { display: block; }
     .loading-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; }
@@ -896,15 +920,79 @@ document.getElementById('backBtn').addEventListener('click',goToDash);
 function renderResult(text,setup){
   const g=setup.grade||'C',sig=setup.signal||'NO TRADE';
   const gc=gradeBadgeClass(g),sc=signalBadgeClass(sig);
-  // Extract R:R line for header
-  const rrM=text.match(/R:R Rating:\s*([^\n]+)/i);
-  const rrHtml=rrM?`<span style="margin-left:auto;font-size:11px;color:var(--text-3);">${rrM[1].trim()}</span>`:'';
-  document.getElementById('resultHeader').innerHTML=`<span class="badge ${gc}">Grade ${g}</span><span class="badge ${sc}">${sig}</span><span style="font-size:12px;color:var(--text-3);margin-left:4px;">${setup.instrument||instrument}</span>${rrHtml}`;
-  const cm=text.match(/Confirmation needed[^:]*:?\s*([\s\S]+?)(?=\n\n|$)/i);
-  let body=text,confHtml='';
-  if(cm){body=text.substring(0,cm.index).trim();confHtml=`<div class="conf-box"><div class="conf-label">⚡ Confirmation needed</div>${cm[1].trim()}</div>`;}
-  const safe=body.replace(/&/g,'&amp;').replace(/[<]/g,'&lt;').replace(/[>]/g,'&gt;');
-  document.getElementById('resultBody').innerHTML='<div class="result-body-text">'+safe+'</div>'+confHtml;
+  const isShort=sig==='SHORT';
+
+  // Parse key fields
+  const get=(rx)=>{ const m=text.match(rx); return m?m[1].trim():''; };
+  const entryZone  = get(/Entry Zone:\s*([^\n]+)/i);
+  const stopLoss   = get(/Stop Loss:\s*([^\n]+)/i);
+  const target1    = get(/Target 1:\s*([^\n]+)/i);
+  const target2    = get(/Target 2:\s*([^\n]+)/i);
+  const rrRating   = get(/R:R Rating:\s*([^\n]+)/i);
+  const curPrice   = get(/Current Price:\s*([^\n]+)/i);
+  const confMatch  = text.match(/Confirmation needed[^:]*:?\s*([\s\S]+?)(?=\n\n|SESSION_CONTEXT|$)/i);
+  const conf       = confMatch ? confMatch[1].trim() : '';
+  const nextMatch  = text.match(/Next update:\s*([^\n]+)/i);
+  const nextUpdate = nextMatch ? nextMatch[1].trim() : '';
+
+  // Extract analysis section (Weekly/Daily/4H/1H block)
+  const analysisMatch = text.match(/Analysis:\s*([\s\S]+?)(?=Confirmation needed|R:R Rating|SESSION_CONTEXT|$)/i);
+  const analysisText  = analysisMatch ? analysisMatch[1].trim() : '';
+
+  // R:R pill class
+  let rrClass = 'rr-good';
+  const rrUp = rrRating.toUpperCase();
+  if(rrUp.includes('EXCELLENT')) rrClass='rr-excellent';
+  else if(rrUp.includes('GOOD')) rrClass='rr-good';
+  else if(rrUp.includes('MARGINAL')) rrClass='rr-marginal';
+  else if(rrUp.includes('POOR')) rrClass='rr-poor';
+
+  // Build header
+  document.getElementById('resultHeader').innerHTML=
+    `<span class="badge ${gc}">Grade ${g}</span>`+
+    `<span class="badge ${sc}">${sig}</span>`+
+    `<span style="font-size:12px;color:var(--text-3);margin-left:4px;">${setup.instrument||instrument}</span>`+
+    (rrRating?`<span class="rr-pill ${rrClass}" style="margin-left:auto;">${rrRating}</span>`:'');
+
+  // Build structured body
+  let html = '';
+
+  // Levels grid
+  if(entryZone||stopLoss||target1) {
+    html += '<div class="levels-grid">';
+    if(curPrice) html += `<div class="level-item"><div class="level-label">Current Price</div><div class="level-val">${curPrice}</div></div>`;
+    if(entryZone) html += `<div class="level-item"><div class="level-label">Entry Zone</div><div class="level-val" style="font-size:13px;">${entryZone}</div></div>`;
+    if(stopLoss) html += `<div class="level-item"><div class="level-label">Stop Loss</div><div class="level-val" style="color:var(--red-text);">${stopLoss}</div></div>`;
+    if(target1) html += `<div class="level-item"><div class="level-label">Target 1</div><div class="level-val" style="color:var(--green-text);font-size:13px;">${target1}</div></div>`;
+    if(target2) html += `<div class="level-item"><div class="level-label">Target 2</div><div class="level-val" style="color:var(--green-text);font-size:13px;">${target2}</div></div>`;
+    html += '</div>';
+  }
+
+  // Action box (confirmation)
+  if(conf) {
+    const actionClass = isShort ? 'action-box action-box-short' : 'action-box';
+    const labelClass = isShort ? 'action-label action-label-short' : 'action-label';
+    const icon = isShort ? 'ti-alert-triangle' : 'ti-target';
+    const labelText = isShort ? '🎯 Wait for short entry' : '🎯 Wait for long entry';
+    html += `<div class="${actionClass}"><div class="${labelClass}"><i class="ti ${icon}"></i>${labelText}</div><div class="action-text">${conf}</div></div>`;
+  }
+
+  // Next update trigger
+  if(nextUpdate) {
+    html += `<div class="next-update-box"><i class="ti ti-bell next-update-icon"></i><div class="next-update-text"><span class="next-update-val">Next update: </span>${nextUpdate}</div></div>`;
+  }
+
+  // Analysis toggle (collapsed by default)
+  if(analysisText) {
+    const safe=analysisText.replace(/&/g,'&amp;').replace(/[<]/g,'&lt;').replace(/[>]/g,'&gt;');
+    html += `<div class="analysis-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.analysis-toggle-arrow').textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼';">
+      <div class="analysis-toggle-label"><i class="ti ti-chart-bar" style="font-size:13px;"></i>Timeframe analysis</div>
+      <span class="analysis-toggle-arrow">▼</span>
+    </div>
+    <div class="analysis-detail">${safe}</div>`;
+  }
+
+  document.getElementById('resultBody').innerHTML = html;
   document.getElementById('resultCard').className='result-card visible';
 }
 
@@ -913,7 +1001,47 @@ function addConvoEntry(text,type,scroll=true){
   div.className='convo-entry';
   const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   const lbl=type==='fresh-charts'?'🔄 Structure Update':'📊 1H Update';
-  div.innerHTML=`<div class="convo-entry-hdr ${type}">${lbl}<span style="opacity:0.5;font-weight:400;margin-left:auto;">${t}</span></div><div class="convo-entry-body">${text}</div>`;
+
+  // Parse status, next update from follow-up
+  const statusM=text.match(/Status:\s*(\w+)/i);
+  const nextM=text.match(/Next update:\s*([^\n]+)/i);
+  const priceM=text.match(/Price now:\s*([^\n]+)/i);
+  const status=statusM?statusM[1].toUpperCase():'';
+  const next=nextM?nextM[1].trim():'';
+  const price=priceM?priceM[1].trim():'';
+
+  // Status color
+  let statusColor='var(--text-3)',statusBg='rgba(255,255,255,0.04)';
+  if(status==='CONFIRMED'){statusColor='var(--green-text)';statusBg='rgba(29,158,117,0.08)';}
+  else if(status==='WAITING'){statusColor='var(--amber-text)';statusBg='rgba(239,159,39,0.06)';}
+  else if(status==='INVALIDATED'){statusColor='var(--red-text)';statusBg='rgba(226,75,74,0.07)';}
+
+  // Body: strip the "Status:" and "Next update:" lines from the detail text
+  const detail=text.replace(/Status:\s*\w+\n?/i,'').replace(/Price now:\s*[^\n]+\n?/i,'').replace(/Next update:\s*[^\n]+\n?/i,'').trim();
+  const safe=detail.replace(/&/g,'&amp;').replace(/[<]/g,'&lt;').replace(/[>]/g,'&gt;');
+
+  let html=`<div class="convo-entry-hdr ${type}">${lbl}<span style="opacity:0.5;font-weight:400;margin-left:auto;">${t}</span></div>`;
+
+  // Status + price bar
+  if(status){
+    html+=`<div style="padding:10px 14px;background:${statusBg};border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:12px;">`;
+    html+=`<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);">Status</span><span style="font-size:13px;font-weight:700;color:${statusColor};">${status}</span></div>`;
+    if(price) html+=`<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);">Price</span><span style="font-size:13px;font-weight:700;color:var(--text-1);">${price}</span></div>`;
+    html+=`</div>`;
+  }
+
+  // Detail text
+  if(safe) html+=`<div class="convo-entry-body">${safe}</div>`;
+
+  // Next update callout
+  if(next){
+    html+=`<div style="padding:9px 14px;background:rgba(255,255,255,0.02);border-top:0.5px solid var(--border);display:flex;align-items:flex-start;gap:8px;">`;
+    html+=`<i class="ti ti-bell" style="color:var(--text-3);font-size:14px;margin-top:1px;flex-shrink:0;"></i>`;
+    html+=`<div style="font-size:12px;color:var(--text-2);line-height:1.5;"><span style="font-weight:700;color:var(--text-1);">Next update: </span>${next}</div>`;
+    html+=`</div>`;
+  }
+
+  div.innerHTML=html;
   el.appendChild(div);
   if(scroll) div.scrollIntoView({behavior:'smooth',block:'start'});
 }
