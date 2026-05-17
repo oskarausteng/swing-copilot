@@ -677,7 +677,7 @@ TF_SLOTS.forEach(slot => {
     const r=new FileReader();
     r.onload=async ev=>{
       const hi=slot.key==='W'||slot.key==='D';
-      const c=await compress(ev.target.result,hi?900:1400,hi?0.78:0.95);
+      const c=await compress(ev.target.result,hi?1600:2400,hi?0.88:0.97);
       uploads[slot.key]=c; renderZone(slot,c); checkReady();
     };
     r.readAsDataURL(file); this.value='';
@@ -759,7 +759,7 @@ function makeDynInp(key,idx){
     const file=this.files[0]; if(!file) return;
     const r=new FileReader();
     r.onload=async ev=>{
-      const c=await compress(ev.target.result,1400,0.95);
+      const c=await compress(ev.target.result,2400,0.97);
       dynImages[idx]=c;
       const zone=document.getElementById('dz_'+key),sl=dynSlots[idx];
       zone.className='followup-zone loaded';
@@ -803,7 +803,7 @@ function setupFresh(zId,iId,label,cb){
     const file=this.files[0]; if(!file) return;
     const r=new FileReader();
     r.onload=async ev=>{
-      const c=await compress(ev.target.result); cb(c);
+      const c=await compress(ev.target.result,1600,0.88); cb(c);
       zone.className='fresh-zone loaded';
       zone.innerHTML=`<img style="width:100%;height:60px;object-fit:cover;border-radius:4px;pointer-events:none;" src="${c}" /><div style="font-size:10px;color:var(--amber-text);margin-top:4px;">✓ ${label}</div>`;
       checkFresh();
