@@ -607,6 +607,8 @@ function showNewAnalysis() {
   document.getElementById('dynZone').innerHTML='';
   document.getElementById('updateBtn').disabled=true;
   document.getElementById('updateBtnText').textContent='Upload a screenshot first';
+  const nsc=document.getElementById('noSetupCard');
+  if(nsc) nsc.remove();
   document.querySelectorAll('.dyn-file').forEach(el=>el.remove());
   document.querySelectorAll('.inst-btn').forEach(b=>b.classList.remove('on'));
   document.getElementById('customInstrument').value='';
@@ -869,10 +871,20 @@ document.getElementById('analyzeBtn').addEventListener('click', async()=>{
     }
     renderResult(data.result,{grade,signal,instrument});
     document.getElementById('setupForm').style.display='none';
-    document.getElementById('monitorSection').className='monitor-section visible';
-    document.getElementById('newsCard').style.display='block';
     document.getElementById('analysisTitle').textContent=instrument;
-    initNews(); buildDynZone(['1h']);
+
+    // Only show monitoring + news for actionable grades A and B
+    const isActionable = grade==='A' || grade==='B';
+    if(isActionable){
+      document.getElementById('monitorSection').className='monitor-section visible';
+      document.getElementById('newsCard').style.display='block';
+      initNews(); buildDynZone(['1h']);
+    } else {
+      // C, D, REJECT — show a "come back later" card instead
+      document.getElementById('monitorSection').className='monitor-section';
+      document.getElementById('newsCard').style.display='none';
+      showNoSetupState(grade);
+    }
     document.getElementById('resultCard').scrollIntoView({behavior:'smooth',block:'start'});
   } catch(err){showErr(err.message);}
   finally{setLoad(false,'initial');}
@@ -1120,6 +1132,33 @@ function updateDashCount() {
   } else {
     document.getElementById('dashTitle').textContent = `Your Setups (${cards.length})`;
   }
+}
+
+// No setup state — shown for C, D, REJECT grades
+function showNoSetupState(grade) {
+  const messages = {
+    'C': { icon: '🔍', title: 'Setup Developing', color: 'var(--amber-text)', bg: 'rgba(239,159,39,0.06)', border: 'rgba(239,159,39,0.2)', body: 'The structure is forming but not ready yet. Check back in 2-3 days with fresh charts once conditions clarify.' },
+    'D': { icon: '⏳', title: 'Nothing Actionable Yet', color: 'var(--purple-text)', bg: 'rgba(127,119,221,0.06)', border: 'rgba(127,119,221,0.2)', body: 'Not enough timeframes are aligned for a trade. Come back with fresh 4-timeframe screenshots when structure becomes clearer.' },
+    'REJECT': { icon: '🚫', title: 'No Setup Found', color: 'var(--red-text)', bg: 'rgba(226,75,74,0.06)', border: 'rgba(226,75,74,0.2)', body: 'The timeframes contradict each other or there is no clear edge. Do not force a trade here.' },
+  };
+  const m = messages[grade] || messages['D'];
+  // Show a simple card below the result
+  const existing = document.getElementById('noSetupCard');
+  if(existing) existing.remove();
+  const card = document.createElement('div');
+  card.id = 'noSetupCard';
+  card.style.cssText = `margin-top:12px;background:${m.bg};border:0.5px solid ${m.border};border-radius:var(--radius);padding:20px 16px;text-align:center;`;
+  card.innerHTML = `
+    <div style="font-size:28px;margin-bottom:8px;">${m.icon}</div>
+    <div style="font-size:14px;font-weight:700;color:${m.color};margin-bottom:6px;">${m.title}</div>
+    <div style="font-size:12px;color:var(--text-3);line-height:1.6;margin-bottom:16px;">${m.body}</div>
+    <button onclick="goToDash()" style="width:100%;padding:11px;background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-weight:600;color:var(--text-2);cursor:pointer;margin-bottom:8px;">
+      ↩ Back to dashboard
+    </button>
+    <button onclick="showNewAnalysis()" style="width:100%;padding:11px;background:var(--green);border:none;border-radius:var(--radius);font-size:13px;font-weight:700;color:#0F4A32;cursor:pointer;">
+      <i class="ti ti-plus"></i> New Analysis
+    </button>`;
+  document.getElementById('resultCard').insertAdjacentElement('afterend', card);
 }
 
 // Invalidated state — swap monitor zone for new analysis prompt
