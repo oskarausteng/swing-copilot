@@ -972,6 +972,7 @@ function renderResult(text,setup){
 
   const curPrice  = getLine('Current Price');
   const entryZone = getLine('Entry Zone');
+  const zoneBasis = getLine('Zone basis');
   const stopLoss  = getLine('Stop Loss');
   const target1   = getLine('Target 1');
   const target2   = getLine('Target 2');
@@ -1026,7 +1027,10 @@ function renderResult(text,setup){
     if(entryZone||stopLoss||target1){
       html+='<div class="levels-grid">';
       if(curPrice)   html+='<div class="level-item"><div class="level-label">Current Price</div><div class="level-val">'+curPrice+'</div></div>';
-      if(entryZone)  html+='<div class="level-item"><div class="level-label">Entry Zone</div><div class="level-val" style="font-size:13px;">'+entryZone+'</div></div>';
+      if(entryZone){
+        const entryHtml = '<div class="level-item"><div class="level-label">Entry Zone</div><div class="level-val" style="font-size:13px;">'+entryZone+'</div>'+(zoneBasis?'<div class="level-sub" style="font-size:10px;color:var(--text-3);line-height:1.4;margin-top:3px;">'+zoneBasis+'</div>':'')+'</div>';
+        html+=entryHtml;
+      }
       if(stopLoss)   html+='<div class="level-item"><div class="level-label">Stop Loss</div><div class="level-val" style="color:var(--red-text);">'+stopLoss+'</div></div>';
       if(target1)    html+='<div class="level-item"><div class="level-label">Target 1</div><div class="level-val" style="color:var(--green-text);font-size:13px;">'+target1+'</div></div>';
       if(target2)    html+='<div class="level-item"><div class="level-label">Target 2</div><div class="level-val" style="color:var(--green-text);font-size:13px;">'+target2+'</div></div>';
