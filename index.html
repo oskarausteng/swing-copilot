@@ -245,8 +245,8 @@
     .fresh-zone-label { font-size: 11px; font-weight: 600; color: rgba(239,159,39,0.7); }
 
     /* ── NEWS CARD ── */
-    .news-card { background: var(--bg-card); border: 0.5px solid rgba(239,159,39,0.25); border-radius: var(--radius); overflow: hidden; margin-top: 12px; }
-    .news-hdr { padding: 12px 14px; background: var(--amber-dim); display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+    .news-card { background: var(--bg-card); border: 1px solid rgba(239,159,39,0.4); border-radius: var(--radius); overflow: hidden; margin-top: 12px; }
+    .news-hdr { padding: 12px 14px; background: rgba(239,159,39,0.12); display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; border-bottom: 0.5px solid rgba(239,159,39,0.2); }
     .news-arrow { font-size: 11px; color: var(--amber-text); }
     .news-body { padding: 14px; border-top: 0.5px solid rgba(239,159,39,0.15); display: none; }
     .news-body.open { display: block; }
@@ -377,18 +377,20 @@
     <div class="news-card" id="newsCard" style="display:none;">
       <div class="news-hdr" id="newsHdr">
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:15px;">📰</span>
+          <span style="font-size:16px;">⚠️</span>
           <div>
-            <div style="font-size:13px;font-weight:700;color:var(--amber-text);">Any high-impact news this week?</div>
-            <div style="font-size:11px;color:var(--text-3);" id="newsSub">Tap events so Claude factors them in</div>
+            <div style="font-size:13px;font-weight:700;color:var(--amber-text);">High-impact news this week?</div>
+            <div style="font-size:11px;color:rgba(239,159,39,0.6);" id="newsSub">Required — Claude blocks entries near NFP, FOMC, CPI etc.</div>
           </div>
         </div>
-        <span class="news-arrow" id="newsArrow">▼</span>
+        <span class="news-arrow" id="newsArrow">▲</span>
       </div>
-      <div class="news-body" id="newsBody">
+      <div class="news-body open" id="newsBody">
+        <div style="font-size:11px;color:rgba(239,159,39,0.7);background:rgba(239,159,39,0.06);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:10px;line-height:1.5;">
+          Claude will <strong style="color:var(--amber-text);">block entry confirmation</strong> within 24h of any selected event, regardless of how clean the trigger looks.
+        </div>
         <div class="news-tags" id="newsTags2"></div>
         <input type="text" class="form-input" id="newsCustom" placeholder="Or type custom: 'BOC Thursday 2pm'..." style="margin-top:10px;font-size:12px;border-color:rgba(239,159,39,0.25);" />
-        <div style="font-size:11px;color:var(--text-3);margin-top:6px;">Claude factors these into every follow-up automatically.</div>
       </div>
     </div>
 
@@ -823,8 +825,8 @@ function checkFresh(){
 function initNews(){
   const row=document.getElementById('newsTags2');
   row.innerHTML=''; selNews.clear(); newsOpen=false;
-  document.getElementById('newsBody').className='news-body';
-  document.getElementById('newsArrow').textContent='▼';
+  document.getElementById('newsBody').className='news-body open';
+  document.getElementById('newsArrow').textContent='▲';
   NEWS_EVENTS.forEach(ev=>{
     const tag=document.createElement('button'); tag.className='news-tag'; tag.textContent=ev.label;
     tag.addEventListener('click',()=>{
@@ -836,6 +838,7 @@ function initNews(){
     });
     row.appendChild(tag);
   });
+  newsOpen=true;
   document.getElementById('newsHdr').onclick=()=>{
     newsOpen=!newsOpen;
     document.getElementById('newsBody').className='news-body'+(newsOpen?' open':'');
