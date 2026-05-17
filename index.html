@@ -1227,7 +1227,7 @@ function showNoSetupState(grade) {
     <button onclick="showNewAnalysis()" style="width:100%;padding:11px;background:var(--green);border:none;border-radius:var(--radius);font-size:13px;font-weight:700;color:#0F4A32;cursor:pointer;">
       <i class="ti ti-plus"></i> New Analysis
     </button>`;
-  document.getElementById('resultCard').insertAdjacentElement('beforebegin', card);
+  document.getElementById('resultCard').insertAdjacentElement('afterend', card);
 }
 
 // Invalidated state — swap monitor zone for new analysis prompt
