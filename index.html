@@ -640,7 +640,15 @@ async function loadSetup(id) {
   convoHist=[];
   document.getElementById('convoHistory').innerHTML='';
   const init=(msgs||[]).find(m=>m.message_type==='initial'&&m.role==='assistant');
-  if (init) renderResult(init.content, s);
+  if(init){
+    renderResult(init.content, s);
+    const sg = s.grade||'C';
+    if(sg!=='A'&&sg!=='B'){
+      document.getElementById('monitorSection').className='monitor-section';
+      document.getElementById('newsCard').style.display='none';
+      showNoSetupState(sg, init.content);
+    }
+  }
   (msgs||[]).filter(m=>m.message_type!=='initial'&&m.role==='assistant').forEach(m=>{
     addConvoEntry(m.content,m.message_type||'update',false);
     convoHist.push({role:'user',content:'[Screenshot]'});
@@ -1211,7 +1219,7 @@ function showNoSetupState(grade) {
     <button onclick="showNewAnalysis()" style="width:100%;padding:11px;background:var(--green);border:none;border-radius:var(--radius);font-size:13px;font-weight:700;color:#0F4A32;cursor:pointer;">
       <i class="ti ti-plus"></i> New Analysis
     </button>`;
-  document.getElementById('resultCard').insertAdjacentElement('afterend', card);
+  document.getElementById('resultCard').insertAdjacentElement('beforebegin', card);
 }
 
 // Invalidated state — swap monitor zone for new analysis prompt
