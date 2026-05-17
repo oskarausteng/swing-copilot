@@ -1074,8 +1074,8 @@ function renderResult(text,setup){
     }
   }
 
-  // Analysis toggle (collapsed by default)
-  if(analysisText){
+  // Analysis toggle — only show for actionable grades
+  if(isActionable && analysisText){
     const safe=analysisText.replace(/&/g,'&amp;').replace(/[<]/g,'&lt;').replace(/[>]/g,'&gt;');
     html+='<div class="analysis-toggle" onclick="toggleAnalysis(this)">'
         +'<div class="analysis-toggle-label"><i class="ti ti-chart-bar" style="font-size:13px;"></i>Timeframe analysis</div>'
@@ -1085,6 +1085,14 @@ function renderResult(text,setup){
   }
 
   document.getElementById('resultBody').innerHTML=html;
+  // For non-actionable grades, hide the body — header badges are enough
+  if(!isActionable){
+    document.getElementById('resultBody').style.display='none';
+    document.getElementById('resultCard').style.borderBottom='none';
+  } else {
+    document.getElementById('resultBody').style.display='';
+    document.getElementById('resultCard').style.borderBottom='';
+  }
   document.getElementById('resultCard').className='result-card visible';
 }
 
