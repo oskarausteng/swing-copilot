@@ -613,7 +613,12 @@ function showNewAnalysis() {
   document.getElementById('selectedRow').textContent='';
   document.getElementById('contextNotes').value='';
   document.querySelectorAll('#newsTags .tag').forEach(t=>t.classList.remove('on'));
-  TF_SLOTS.forEach(s=>renderZone(s,null));
+  // Clear file input values so browser doesn't reuse previous files
+  TF_SLOTS.forEach(s=>{
+    const inp=document.getElementById(s.fileId);
+    if(inp) inp.value='';
+    renderZone(s,null);
+  });
   hideErr(); checkReady(); showScreen('screenAnalysis');
 }
 
