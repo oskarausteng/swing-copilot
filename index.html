@@ -949,84 +949,133 @@ document.getElementById('freshBtn').addEventListener('click',async()=>{
 document.getElementById('backBtn').addEventListener('click',goToDash);
 
 // Render helpers
+function toggleAnalysis(el){
+  var d=el.nextElementSibling;
+  var open=d.classList.toggle('open');
+  el.querySelector('.analysis-toggle-arrow').textContent=open?'▲':'▼';
+}
+
 function renderResult(text,setup){
   const g=setup.grade||'C',sig=setup.signal||'NO TRADE';
   const gc=gradeBadgeClass(g),sc=signalBadgeClass(sig);
-  const isShort=sig==='SHORT';
+  const isActionable=g==='A'||g==='B';
 
-  // Parse key fields
-  const get=(rx)=>{ const m=text.match(rx); return m?m[1].trim():''; };
-  const entryZone  = get(/Entry Zone:\s*([^\n]+)/i);
-  const stopLoss   = get(/Stop Loss:\s*([^\n]+)/i);
-  const target1    = get(/Target 1:\s*([^\n]+)/i);
-  const target2    = get(/Target 2:\s*([^\n]+)/i);
-  const rrRating   = get(/R:R Rating:\s*([^\n]+)/i);
-  const curPrice   = get(/Current Price:\s*([^\n]+)/i);
-  const confMatch  = text.match(/Confirmation needed[^:]*:?\s*([\s\S]+?)(?=\n\n|SESSION_CONTEXT|$)/i);
-  const conf       = confMatch ? confMatch[1].trim() : '';
-  const nextMatch  = text.match(/Next update:\s*([^\n]+)/i);
-  const nextUpdate = nextMatch ? nextMatch[1].trim() : '';
+  function getLine(label){
+    const ls=text.split('\n');
+    for(const l of ls){
+      if(l.toLowerCase().startsWith(label.toLowerCase())){
+        return l.substring(l.indexOf(':')+1).trim();
+      }
+    }
+    return '';
+  }
 
-  // Extract analysis section (Weekly/Daily/4H/1H block)
-  const analysisMatch = text.match(/Analysis:\s*([\s\S]+?)(?=Confirmation needed|R:R Rating|SESSION_CONTEXT|$)/i);
-  const analysisText  = analysisMatch ? analysisMatch[1].trim() : '';
+  const curPrice  = getLine('Current Price');
+  const entryZone = getLine('Entry Zone');
+  const stopLoss  = getLine('Stop Loss');
+  const target1   = getLine('Target 1');
+  const target2   = getLine('Target 2');
+  const rrRating  = getLine('R:R Rating');
+  const bull      = getLine('Bull scenario');
+  const bear      = getLine('Bear scenario');
+  const what      = getLine('What needs to happen');
+  const tf        = getLine('Timeframe');
+
+  // Confirmation needed
+  const cmIdx = text.search(/Confirmation needed/i);
+  let conf = '';
+  if(cmIdx !== -1){
+    const after = text.substring(cmIdx);
+    const colonIdx = after.indexOf(':');
+    if(colonIdx !== -1){
+      const rest = after.substring(colonIdx+1).trim();
+      const dbl = rest.indexOf('\n\n');
+      conf = dbl !== -1 ? rest.substring(0,dbl).trim() : rest.trim();
+    }
+  }
+
+  // Next update
+  const nextUpdate = getLine('Next update');
+
+  // Analysis section
+  const aIdx = text.search(/^Analysis:/im);
+  let analysisText = '';
+  if(aIdx !== -1){
+    const aEnd = text.search(/^(Confirmation needed|Key levels|What needs|R:R Rating|SESSION_CONTEXT)/im);
+    analysisText = text.substring(aIdx + 'Analysis:'.length, aEnd !== -1 ? aEnd : undefined).trim();
+  }
 
   // R:R pill class
-  let rrClass = 'rr-good';
-  const rrUp = rrRating.toUpperCase();
-  if(rrUp.includes('EXCELLENT')) rrClass='rr-excellent';
-  else if(rrUp.includes('GOOD')) rrClass='rr-good';
-  else if(rrUp.includes('MARGINAL')) rrClass='rr-marginal';
-  else if(rrUp.includes('POOR')) rrClass='rr-poor';
+  let rrClass='rr-good';
+  const rru=rrRating.toUpperCase();
+  if(rru.includes('EXCELLENT')) rrClass='rr-excellent';
+  else if(rru.includes('MARGINAL')) rrClass='rr-marginal';
+  else if(rru.includes('POOR')) rrClass='rr-poor';
 
-  // Build header
+  // Header
   document.getElementById('resultHeader').innerHTML=
-    `<span class="badge ${gc}">Grade ${g}</span>`+
-    `<span class="badge ${sc}">${sig}</span>`+
-    `<span style="font-size:12px;color:var(--text-3);margin-left:4px;">${setup.instrument||instrument}</span>`+
-    (rrRating?`<span class="rr-pill ${rrClass}" style="margin-left:auto;">${rrRating}</span>`:'');
+    '<span class="badge '+gc+'">Grade '+g+'</span>'+
+    '<span class="badge '+sc+'">'+sig+'</span>'+
+    '<span style="font-size:12px;color:var(--text-3);margin-left:4px;">'+(setup.instrument||instrument)+'</span>'+
+    (rrRating?'<span class="rr-pill '+rrClass+'" style="margin-left:auto;">'+rrRating+'</span>':'');
 
-  // Build structured body
-  let html = '';
+  let html='';
 
-  // Levels grid
-  if(entryZone||stopLoss||target1) {
-    html += '<div class="levels-grid">';
-    if(curPrice) html += `<div class="level-item"><div class="level-label">Current Price</div><div class="level-val">${curPrice}</div></div>`;
-    if(entryZone) html += `<div class="level-item"><div class="level-label">Entry Zone</div><div class="level-val" style="font-size:13px;">${entryZone}</div></div>`;
-    if(stopLoss) html += `<div class="level-item"><div class="level-label">Stop Loss</div><div class="level-val" style="color:var(--red-text);">${stopLoss}</div></div>`;
-    if(target1) html += `<div class="level-item"><div class="level-label">Target 1</div><div class="level-val" style="color:var(--green-text);font-size:13px;">${target1}</div></div>`;
-    if(target2) html += `<div class="level-item"><div class="level-label">Target 2</div><div class="level-val" style="color:var(--green-text);font-size:13px;">${target2}</div></div>`;
-    html += '</div>';
-  }
-
-  // Action box (confirmation)
-  if(conf) {
-    const actionClass = isShort ? 'action-box action-box-short' : 'action-box';
-    const labelClass = isShort ? 'action-label action-label-short' : 'action-label';
-    const icon = isShort ? 'ti-alert-triangle' : 'ti-target';
-    const labelText = isShort ? '🎯 Wait for short entry' : '🎯 Wait for long entry';
-    html += `<div class="${actionClass}"><div class="${labelClass}"><i class="ti ${icon}"></i>${labelText}</div><div class="action-text">${conf}</div></div>`;
-  }
-
-  // Next update trigger
-  if(nextUpdate) {
-    html += `<div class="next-update-box"><i class="ti ti-bell next-update-icon"></i><div class="next-update-text"><span class="next-update-val">Next update: </span>${nextUpdate}</div></div>`;
+  if(isActionable){
+    // Levels grid
+    if(entryZone||stopLoss||target1){
+      html+='<div class="levels-grid">';
+      if(curPrice)   html+='<div class="level-item"><div class="level-label">Current Price</div><div class="level-val">'+curPrice+'</div></div>';
+      if(entryZone)  html+='<div class="level-item"><div class="level-label">Entry Zone</div><div class="level-val" style="font-size:13px;">'+entryZone+'</div></div>';
+      if(stopLoss)   html+='<div class="level-item"><div class="level-label">Stop Loss</div><div class="level-val" style="color:var(--red-text);">'+stopLoss+'</div></div>';
+      if(target1)    html+='<div class="level-item"><div class="level-label">Target 1</div><div class="level-val" style="color:var(--green-text);font-size:13px;">'+target1+'</div></div>';
+      if(target2)    html+='<div class="level-item"><div class="level-label">Target 2</div><div class="level-val" style="color:var(--green-text);font-size:13px;">'+target2+'</div></div>';
+      html+='</div>';
+    }
+    // Action box
+    if(conf){
+      const isShort=sig==='SHORT';
+      const aClass=isShort?'action-box action-box-short':'action-box';
+      const lClass=isShort?'action-label action-label-short':'action-label';
+      const lbl=isShort?'🎯 Wait for short entry':'🎯 Wait for long entry';
+      html+='<div class="'+aClass+'"><div class="'+lClass+'">'+lbl+'</div><div class="action-text">'+conf+'</div></div>';
+    }
+    // Next update
+    if(nextUpdate){
+      html+='<div class="next-update-box"><i class="ti ti-bell next-update-icon"></i><div class="next-update-text"><span class="next-update-val">Next update: </span>'+nextUpdate+'</div></div>';
+    }
+  } else {
+    // C/D/REJECT — key levels
+    if(bull||bear){
+      html+='<div style="padding:14px 16px;border-bottom:0.5px solid var(--border);">';
+      html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:10px;">Key levels to watch</div>';
+      html+='<div style="display:flex;flex-direction:column;gap:8px;">';
+      if(bull) html+='<div style="padding:9px 12px;background:rgba(29,158,117,0.06);border:0.5px solid rgba(29,158,117,0.2);border-radius:var(--radius-sm);font-size:12px;color:var(--text-2);line-height:1.5;"><span style="font-size:10px;font-weight:700;color:var(--green-text);display:block;margin-bottom:3px;">🟢 BULL SCENARIO</span>'+bull+'</div>';
+      if(bear) html+='<div style="padding:9px 12px;background:rgba(226,75,74,0.06);border:0.5px solid rgba(226,75,74,0.2);border-radius:var(--radius-sm);font-size:12px;color:var(--text-2);line-height:1.5;"><span style="font-size:10px;font-weight:700;color:var(--red-text);display:block;margin-bottom:3px;">🔴 BEAR SCENARIO</span>'+bear+'</div>';
+      html+='</div></div>';
+    }
+    if(what||tf){
+      html+='<div style="padding:12px 16px;border-bottom:0.5px solid var(--border);display:flex;flex-direction:column;gap:6px;">';
+      if(what) html+='<div style="font-size:12px;color:var(--text-2);line-height:1.5;"><span style="font-weight:700;color:var(--text-1);">Needs to happen: </span>'+what+'</div>';
+      if(tf)   html+='<div style="font-size:12px;color:var(--text-3);"><i class="ti ti-clock" style="font-size:12px;margin-right:4px;"></i>'+tf+'</div>';
+      html+='</div>';
+    }
   }
 
   // Analysis toggle (collapsed by default)
-  if(analysisText) {
+  if(analysisText){
     const safe=analysisText.replace(/&/g,'&amp;').replace(/[<]/g,'&lt;').replace(/[>]/g,'&gt;');
-    html += `<div class="analysis-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.analysis-toggle-arrow').textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼';">
-      <div class="analysis-toggle-label"><i class="ti ti-chart-bar" style="font-size:13px;"></i>Timeframe analysis</div>
-      <span class="analysis-toggle-arrow">▼</span>
-    </div>
-    <div class="analysis-detail">${safe}</div>`;
+    html+='<div class="analysis-toggle" onclick="toggleAnalysis(this)">'
+        +'<div class="analysis-toggle-label"><i class="ti ti-chart-bar" style="font-size:13px;"></i>Timeframe analysis</div>'
+        +'<span class="analysis-toggle-arrow">▼</span>'
+        +'</div>'
+        +'<div class="analysis-detail">'+safe+'</div>';
   }
 
-  document.getElementById('resultBody').innerHTML = html;
+  document.getElementById('resultBody').innerHTML=html;
   document.getElementById('resultCard').className='result-card visible';
 }
+
 
 function addConvoEntry(text,type,scroll=true){
   const el=document.getElementById('convoHistory'),div=document.createElement('div');
