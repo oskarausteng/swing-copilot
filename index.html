@@ -883,7 +883,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async()=>{
       // C, D, REJECT — show a "come back later" card instead
       document.getElementById('monitorSection').className='monitor-section';
       document.getElementById('newsCard').style.display='none';
-      showNoSetupState(grade);
+      showNoSetupState(grade, data.result);
     }
     document.getElementById('resultCard').scrollIntoView({behavior:'smooth',block:'start'});
   } catch(err){showErr(err.message);}
