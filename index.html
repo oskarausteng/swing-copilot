@@ -643,9 +643,11 @@ async function loadSetup(id) {
   if(init){
     renderResult(init.content, s);
     const sg = s.grade||'C';
-    if(sg!=='A'&&sg!=='B'){
+    if(sg==='REJECT'){
       document.getElementById('monitorSection').className='monitor-section';
       document.getElementById('newsCard').style.display='none';
+    } else if(sg!=='A'&&sg!=='B'){
+      // C/D — show monitor section AND the watch levels card
       showNoSetupState(sg, init.content);
     }
   }
@@ -763,7 +765,7 @@ function buildDynZone(keys) {
     cont.appendChild(g);
   }
   document.getElementById('monitorTitle').textContent='Send update — '+dynSlots.map(s=>s.label).join(' + ');
-  document.getElementById('monitorSub').textContent=dynSlots.length>1?'Upload each chart screenshot below':'Upload a fresh screenshot when price moves';
+  document.getElementById('monitorSub').textContent=dynSlots.length>1?'Upload each chart screenshot below':'Send a screenshot when price reaches a watch level';
   document.getElementById('updateBtn').disabled=true;
   document.getElementById('updateBtnText').textContent='Upload screenshot'+(keys.length>1?'s':'')+' first';
 }
@@ -881,16 +883,21 @@ document.getElementById('analyzeBtn').addEventListener('click', async()=>{
     document.getElementById('setupForm').style.display='none';
     document.getElementById('analysisTitle').textContent=instrument;
 
-    // Only show monitoring + news for actionable grades A and B
     const isActionable = grade==='A' || grade==='B';
-    if(isActionable){
+    const isRejected = grade==='REJECT';
+
+    // Always show news card and monitor for A, B, C, D — not for REJECT
+    if(!isRejected){
       document.getElementById('monitorSection').className='monitor-section visible';
       document.getElementById('newsCard').style.display='block';
       initNews(); buildDynZone(['1h']);
     } else {
-      // C, D, REJECT — show a "come back later" card instead
       document.getElementById('monitorSection').className='monitor-section';
       document.getElementById('newsCard').style.display='none';
+    }
+
+    // Show the no-setup info card for C/D (above the monitor section)
+    if(!isActionable && !isRejected){
       showNoSetupState(grade, data.result);
     }
     document.getElementById('resultCard').scrollIntoView({behavior:'smooth',block:'start'});
