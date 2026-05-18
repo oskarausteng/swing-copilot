@@ -1237,7 +1237,8 @@ function showNoSetupState(grade, parsedText) {
   const what = getF(parsedText, 'What needs to happen');
   const tf   = getF(parsedText, 'Timeframe');
 
-  console.log('Grade D fields:', { bull, bear, what, tf, hasText: !!parsedText });
+  console.log('Grade D fields:', { bull, bear, what, tf });
+  console.log('Raw AI text:', parsedText ? parsedText.substring(0, 500) : 'NO TEXT');
 
   const card = document.createElement('div');
   card.id = 'noSetupCard';
@@ -1247,6 +1248,15 @@ function showNoSetupState(grade, parsedText) {
     + '<div style="font-size:26px;margin-bottom:6px;">'+cfg.icon+'</div>'
     + '<div style="font-size:14px;font-weight:700;color:'+cfg.color+';">'+cfg.title+'</div>'
     + '</div>';
+
+  // If fields didn't parse, show whatever the AI said in a simple block
+  if(!bull && !bear && parsedText) {
+    // Strip analysis section, show the first part
+    const firstPart = parsedText.split(/^Analysis:/im)[0].trim();
+    if(firstPart && firstPart.length > 20) {
+      html += '<div style="padding:12px 16px;border-bottom:0.5px solid var(--border);font-size:12px;color:var(--text-2);line-height:1.7;white-space:pre-wrap;">'+firstPart.replace(/&/g,'&amp;').replace(/[<]/g,'&lt;').replace(/[>]/g,'&gt;')+'</div>';
+    }
+  }
 
   if(bull || bear) {
     html += '<div style="padding:14px 16px;border-bottom:0.5px solid var(--border);">';
