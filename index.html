@@ -1057,7 +1057,16 @@ function renderResult(text,setup){
       const aClass=isShort?'action-box action-box-short':'action-box';
       const lClass=isShort?'action-label action-label-short':'action-label';
       const lbl=isShort?'🎯 Wait for short entry':'🎯 Wait for long entry';
-      html+='<div class="'+aClass+'"><div class="'+lClass+'">'+lbl+'</div><div class="action-text">'+conf+'</div></div>';
+      // Strip any existing screenshot instruction from conf to avoid duplication
+      const confClean=conf.replace(/when this happens,?\s*send a 1h screenshot[^.]*/gi,'').replace(/send a 1h screenshot[^.]*/gi,'').trim().replace(/\.$/, '');
+      html+='<div class="'+aClass+'">'
+        +'<div class="'+lClass+'">'+lbl+'</div>'
+        +'<div class="action-text">'+confClean+'</div>'
+        +'<div style="margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:8px;">'
+        +'<i class="ti ti-camera" style="font-size:15px;opacity:0.7;flex-shrink:0;"></i>'
+        +'<span style="font-size:12px;font-weight:600;">When this happens — send a 1H screenshot below and Claude will confirm entry.</span>'
+        +'</div>'
+        +'</div>';
     }
     // Next update
     if(nextUpdate){
