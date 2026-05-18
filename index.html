@@ -1239,10 +1239,11 @@ function showNoSetupState(grade, parsedText) {
     return '';
   }
 
-  const bull = getF(parsedText, 'Bull scenario');
-  const bear = getF(parsedText, 'Bear scenario');
-  const what = getF(parsedText, 'What needs to happen');
-  const tf   = getF(parsedText, 'Timeframe');
+  const stripMd = s => s.split('**').join('').split('*').join('').split('->').join('→').trim();
+  const bull = stripMd(getF(parsedText, 'Bull scenario'));
+  const bear = stripMd(getF(parsedText, 'Bear scenario'));
+  const what = stripMd(getF(parsedText, 'What needs to happen'));
+  const tf   = stripMd(getF(parsedText, 'Timeframe'));
 
   console.log('Grade D fields:', { bull, bear, what, tf });
   console.log('Raw AI text:', parsedText ? parsedText.substring(0, 500) : 'NO TEXT');
