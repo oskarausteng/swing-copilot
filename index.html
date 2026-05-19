@@ -985,13 +985,14 @@ function renderResult(text,setup){
     return '';
   }
 
-  const curPrice  = getLine('Current Price');
-  const entryZone = getLine('Entry Zone');
-  const zoneBasis = getLine('Zone basis');
-  const stopLoss  = getLine('Stop Loss');
-  const target1   = getLine('Target 1');
-  const target2   = getLine('Target 2');
-  const rrRating  = getLine('R:R Rating');
+  const curPrice    = getLine('Current Price');
+  const entryZone   = getLine('Entry Zone');
+  const zoneBasis   = getLine('Zone basis');
+  const entryTrig   = getLine('Entry trigger');
+  const stopLoss    = getLine('Stop Loss');
+  const target1     = getLine('Target 1');
+  const target2     = getLine('Target 2');
+  const rrRating    = getLine('R:R Rating');
   const bull      = getLine('Bull scenario');
   const bear      = getLine('Bear scenario');
   const what      = getLine('What needs to happen');
@@ -1043,12 +1044,24 @@ function renderResult(text,setup){
       html+='<div class="levels-grid">';
       if(curPrice)   html+='<div class="level-item"><div class="level-label">Current Price</div><div class="level-val">'+curPrice+'</div></div>';
       if(entryZone){
-        const entryHtml = '<div class="level-item"><div class="level-label">Entry Zone</div><div class="level-val" style="font-size:13px;">'+entryZone+'</div>'+(zoneBasis?'<div class="level-sub" style="font-size:10px;color:var(--text-3);line-height:1.4;margin-top:3px;">'+zoneBasis+'</div>':'')+'</div>';
-        html+=entryHtml;
+        const ebSub = (entryTrig?'<div class="level-sub" style="font-size:10px;color:var(--amber-text);line-height:1.4;margin-top:3px;font-weight:600;">'+entryTrig+'</div>':'')
+          + (zoneBasis?'<div class="level-sub" style="font-size:10px;color:var(--text-3);line-height:1.4;margin-top:2px;">'+zoneBasis+'</div>':'');
+        html+='<div class="level-item"><div class="level-label">Entry Zone</div><div class="level-val" style="font-size:13px;">'+entryZone+'</div>'+ebSub+'</div>';
       }
       if(stopLoss)   html+='<div class="level-item"><div class="level-label">Stop Loss</div><div class="level-val" style="color:var(--red-text);">'+stopLoss+'</div></div>';
-      if(target1)    html+='<div class="level-item"><div class="level-label">Target 1</div><div class="level-val" style="color:var(--green-text);font-size:13px;">'+target1+'</div></div>';
-      if(target2)    html+='<div class="level-item"><div class="level-label">Target 2</div><div class="level-val" style="color:var(--green-text);font-size:13px;">'+target2+'</div></div>';
+      if(target1){
+        // Split target value from rationale (after em dash or parenthetical)
+        const t1parts = target1.split(' — ');
+        const t1val = t1parts[0].trim();
+        const t1why = t1parts[1] ? t1parts[1].trim() : '';
+        html+='<div class="level-item"><div class="level-label">Target 1</div><div class="level-val" style="color:var(--green-text);font-size:13px;">'+t1val+'</div>'+(t1why?'<div class="level-sub" style="font-size:10px;color:var(--text-3);line-height:1.4;margin-top:2px;">'+t1why+'</div>':'')+'</div>';
+      }
+      if(target2){
+        const t2parts = target2.split(' — ');
+        const t2val = t2parts[0].trim();
+        const t2why = t2parts[1] ? t2parts[1].trim() : '';
+        html+='<div class="level-item"><div class="level-label">Target 2</div><div class="level-val" style="color:var(--green-text);font-size:13px;">'+t2val+'</div>'+(t2why?'<div class="level-sub" style="font-size:10px;color:var(--text-3);line-height:1.4;margin-top:2px;">'+t2why+'</div>':'')+'</div>';
+      }
       html+='</div>';
     }
     // Action box
